@@ -1,185 +1,7 @@
 //Inspiration: https://github.com/simondevyoutube?tab=repositories
 import * as THREE from "https://cdn.skypack.dev/three@0.136";
-
+import { FirstPersonCamera } from "./scripts/FirstPersonCamera.js";
 import { FirstPersonControls } from "https://cdn.skypack.dev/three@0.136/examples/jsm/controls/FirstPersonControls.js";
-
-const KEYS = {
-  a: 65,
-  s: 83,
-  w: 87,
-  d: 68,
-};
-
-function clamp(x, a, b) {
-  return Math.min(Math.max(x, a), b);
-}
-
-// InputController class to handle input from the user.
-class InputController {
-  constructor(target) {
-    this.target_ = target || document;
-    this.initialize_();
-  }
-
-  initialize_() {
-    this.current_ = {
-      leftButton: false,
-      rightButton: false,
-      mouseXDelta: 0,
-      mouseYDelta: 0,
-      mouseX: 0,
-      mouseY: 0,
-    };
-    this.previous_ = null;
-    this.keys_ = {};
-    this.previousKeys_ = {};
-    this.target_.addEventListener(
-      "mousedown",
-      (e) => this.onMouseDown_(e),
-      false
-    );
-    this.target_.addEventListener(
-      "mousemove",
-      (e) => this.onMouseMove_(e),
-      false
-    );
-    this.target_.addEventListener("keydown", (e) => this.onKeyDown_(e), false);
-    this.target_.addEventListener("keyup", (e) => this.onKeyUp_(e), false);
-  }
-
-  onMouseMove_(e) {
-    this.current_.mouseX = e.pageX - window.innerWidth / 2;
-    this.current_.mouseY = e.pageY - window.innerHeight / 2;
-
-    if (this.previous_ === null) {
-      this.previous_ = { ...this.current_ };
-    }
-
-    this.current_.mouseXDelta = this.current_.mouseX - this.previous_.mouseX;
-    this.current_.mouseYDelta = this.current_.mouseY - this.previous_.mouseY;
-  }
-
-  onMouseDown_(e) {
-    this.onMouseMove_(e);
-
-    switch (e.button) {
-      case 0: {
-        this.current_.leftButton = true;
-        break;
-      }
-      case 2: {
-        this.current_.rightButton = true;
-        break;
-      }
-    }
-  }
-
-  onKeyDown_(e) {
-    this.keys_[e.keyCode] = true;
-  }
-
-  onKeyUp_(e) {
-    this.keys_[e.keyCode] = false;
-  }
-
-  key(keyCode) {
-    return !!this.keys_[keyCode];
-  }
-
-  isReady() {
-    return this.previous_ !== null;
-  }
-
-  update(_) {
-    if (this.previous_ !== null) {
-      this.current_.mouseXDelta = this.current_.mouseX - this.previous_.mouseX;
-      this.current_.mouseYDelta = this.current_.mouseY - this.previous_.mouseY;
-
-      this.previous_ = { ...this.current_ };
-    }
-  }
-}
-
-/**
- * Credit: https://github.com/simondevyoutube/ThreeJS_Tutorial_FirstPersonCamera
- * The fps camera code is based on the code from the above link.
- */
-class FirstPersonCamera {
-  constructor(camera) {
-    this.camera_ = camera;
-    this.input_ = new InputController();
-    this.rotation_ = new THREE.Quaternion();
-    this.translation_ = new THREE.Vector3(0, 2, 0);
-    this.phi_ = 0;
-    this.phiSpeed_ = 8;
-    this.theta_ = 0;
-    this.thetaSpeed_ = 5;
-  }
-
-  update(timeElapsedS) {
-    this.updateRotation_(timeElapsedS);
-    this.updateCamera_(timeElapsedS);
-    this.updateTranslation_(timeElapsedS);
-    this.input_.update(timeElapsedS);
-  }
-
-  updateCamera_(_) {
-    this.camera_.quaternion.copy(this.rotation_);
-    this.camera_.position.copy(this.translation_);
-
-    const forward = new THREE.Vector3(0, 0, -1);
-    forward.applyQuaternion(this.rotation_);
-
-    const dir = forward.clone();
-
-    forward.multiplyScalar(100);
-    forward.add(this.translation_);
-  }
-
-  updateTranslation_(timeElapsedS) {
-    const forwardVelocity =
-      (this.input_.key(KEYS.w) ? 1 : 0) + (this.input_.key(KEYS.s) ? -1 : 0);
-    const strafeVelocity =
-      (this.input_.key(KEYS.a) ? 1 : 0) + (this.input_.key(KEYS.d) ? -1 : 0);
-
-    const qx = new THREE.Quaternion();
-    qx.setFromAxisAngle(new THREE.Vector3(0, 1, 0), this.phi_);
-
-    const forward = new THREE.Vector3(0, 0, -1);
-    forward.applyQuaternion(qx);
-    forward.multiplyScalar(forwardVelocity * timeElapsedS * 10);
-
-    const left = new THREE.Vector3(-1, 0, 0);
-    left.applyQuaternion(qx);
-    left.multiplyScalar(strafeVelocity * timeElapsedS * 10);
-
-    this.translation_.add(forward);
-    this.translation_.add(left);
-  }
-
-  updateRotation_(timeElapsedS) {
-    const xh = this.input_.current_.mouseXDelta / window.innerWidth;
-    const yh = this.input_.current_.mouseYDelta / window.innerHeight;
-
-    this.phi_ += -xh * this.phiSpeed_;
-    this.theta_ = clamp(
-      this.theta_ + -yh * this.thetaSpeed_,
-      -Math.PI / 3,
-      Math.PI / 3
-    );
-
-    const qx = new THREE.Quaternion();
-    qx.setFromAxisAngle(new THREE.Vector3(0, 1, 0), this.phi_);
-    const qz = new THREE.Quaternion();
-    qz.setFromAxisAngle(new THREE.Vector3(1, 0, 0), this.theta_);
-
-    const q = new THREE.Quaternion();
-    q.multiply(qx);
-    q.multiply(qz);
-
-    this.rotation_.copy(q);
-  }
-}
 
 class Setup {
   constructor() {
@@ -190,14 +12,15 @@ class Setup {
     this.initializeRenderer_();
     this.initializeLights_();
     this.initializeScene_();
-    this.initializeCamera();
-
+    this.initializeFirstPersonCamera();
+    // this.initializeStaticCamera(); //Only for testing purposes
     this.previousRAF_ = null;
     this.raf_();
     this.onWindowResize_();
   }
 
-  initializeCamera() {
+  //Initilizes the FirstPersonCamera class and the FirstPersonControls class
+  initializeFirstPersonCamera() {
     this.controls_ = new FirstPersonControls(
       this.camera_,
       this.threejs_.domElement
@@ -205,19 +28,29 @@ class Setup {
     this.controls_.lookSpeed = 0.8;
     this.controls_.movementSpeed = 5;
 
+    // this.fpsCamera_ = new FirstPersonCamera(this.camera_, true); //Use this for AZERTY keyboard
     this.fpsCamera_ = new FirstPersonCamera(this.camera_);
   }
 
+  //Temp camera for testing purposes
+  initializeStaticCamera() {
+    const camera = new THREE.PerspectiveCamera(75, 1920 / 1080, 0.1, 1000);
+    camera.position.set(0, 10, 20);
+    camera.lookAt(0, 0, 0);
+    this.camera_ = camera;
+  }
+
+  //Initializes the renderer and the camera
   initializeRenderer_() {
     this.threejs_ = new THREE.WebGLRenderer({
       antialias: false,
     });
-    this.threejs_.shadowMap.enabled = true;
+    this.threejs_.shadowMap.enabled = true; //Enable shadow mapping
     this.threejs_.shadowMap.type = THREE.PCFSoftShadowMap;
-    this.threejs_.setPixelRatio(window.devicePixelRatio);
+    this.threejs_.setPixelRatio(window.devicePixelRatio); //Set resolution of rendered output to match the screen resolution
     this.threejs_.setSize(window.innerWidth, window.innerHeight);
-    this.threejs_.physicallyCorrectLights = true;
-    this.threejs_.outputEncoding = THREE.sRGBEncoding;
+    this.threejs_.physicallyCorrectLights = true; //Simulates real-world light behavior
+    // this.threejs_.outputEncoding = THREE.sRGBEncoding; //Results in a more bright scene (too bright)
 
     document.body.appendChild(this.threejs_.domElement);
 
@@ -233,11 +66,12 @@ class Setup {
     const aspect = 1920 / 1080;
     const near = 1.0;
     const far = 1000.0;
+    //The main camera for the scene, the FirstPersonCamera ands first person behavior to this camera
     this.camera_ = new THREE.PerspectiveCamera(fov, aspect, near, far);
-    this.camera_.position.set(0, 2, 0);
 
     this.scene_ = new THREE.Scene();
 
+    //Can be used to add UI elements (such as minimap, crosshair, etc.)
     this.uiCamera_ = new THREE.OrthographicCamera(
       -1,
       1,
@@ -249,6 +83,7 @@ class Setup {
     this.uiScene_ = new THREE.Scene();
   }
 
+  //Initializes the scene with the objects and materials
   initializeScene_() {
     const loader = new THREE.CubeTextureLoader();
 
@@ -318,8 +153,9 @@ class Setup {
     this.scene_.add(wall4);
   }
 
+  //Initializes the lights in the scene
   initializeLights_() {
-    const distance = 50.0;
+    const distance = 100.0;
     const angle = Math.PI / 4.0;
     const penumbra = 0.5;
     const decay = 1.0;
@@ -334,22 +170,24 @@ class Setup {
     );
     light.castShadow = true;
 
-    light.position.set(25, 25, 0);
+    light.position.set(25, 25, 25);
     light.lookAt(0, 0, 0);
 
-    let ambientLight = new THREE.AmbientLight(0x404040, 0.25);
+    let ambientLight = new THREE.AmbientLight(0x404040, 1);
     this.scene_.add(ambientLight);
     this.scene_.add(light);
 
-    const upColour = 0xffff80;
-    const downColour = 0x808080;
-    light = new THREE.HemisphereLight(upColour, downColour, 0.5);
-    light.color.setHSL(0.6, 1, 0.6);
-    light.groundColor.setHSL(0.095, 1, 0.75);
-    light.position.set(0, 4, 0);
-    this.scene_.add(light);
+    //Hemisphere light, can be used to simulate the sky
+    // const upColour = 0xffff80;
+    // const downColour = 0x808080;
+    // light = new THREE.HemisphereLight(upColour, downColour, 0.5);
+    // light.color.setHSL(0.6, 1, 0.6);
+    // light.groundColor.setHSL(0.095, 1, 0.75);
+    // light.position.set(0, 4, 0);
+    // this.scene_.add(light);
   }
 
+  //Load material helper function
   loadMaterial_(name, tiling) {
     const mapLoader = new THREE.TextureLoader();
     const maxAnisotropy = this.threejs_.capabilities.getMaxAnisotropy();
@@ -395,6 +233,7 @@ class Setup {
     return material;
   }
 
+  //Resize the window
   onWindowResize_() {
     this.camera_.aspect = window.innerWidth / window.innerHeight;
     this.camera_.updateProjectionMatrix();
@@ -425,7 +264,10 @@ class Setup {
   step_(timeElapsed) {
     const timeElapsedS = timeElapsed * 0.001;
 
-    this.fpsCamera_.update(timeElapsedS);
+    if (this.fpsCamera_) {
+      //If statement for if wer are testing with the static camera
+      this.fpsCamera_.update(timeElapsedS);
+    }
   }
 }
 
