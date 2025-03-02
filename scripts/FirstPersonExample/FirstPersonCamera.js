@@ -1,9 +1,6 @@
 import { InputController } from "./InputController.js";
 import * as THREE from "https://cdn.skypack.dev/three@0.136";
 
-//Better camera using collisions
-//https://github.com/mrdoob/three.js/blob/master/examples/games_fps.html
-
 /**
  * Credit: https://github.com/simondevyoutube/ThreeJS_Tutorial_FirstPersonCamera
  * The FirstPersonCamera code is based on the code from the above link.
