@@ -1,23 +1,38 @@
 import * as THREE from "https://cdn.skypack.dev/three@0.136";
 import Stats from "three/addons/libs/stats.module.js";
-import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import { Octree } from "three/addons/math/Octree.js";
 import { OctreeHelper } from "three/addons/helpers/OctreeHelper.js";
 import { Capsule } from "three/addons/math/Capsule.js";
 import { GUI } from "three/addons/libs/lil-gui.module.min.js";
+import { SceneBuilder } from "./scripts/SceneBuilder";
 
 /**
  * The Camera and collision code is based on the threejs example:
  * https://github.com/mrdoob/three.js/blob/master/examples/games_fps.html
  */
 
-const loader = new GLTFLoader().setPath("/resources/");
-const GRAVITY = 30;
+const GRAVITY = 25;
 const STEPS_PER_FRAME = 5;
 
-export class CollisionExample {
+export class Main {
   constructor(target) {
     this.target_ = target || document;
+
+    this.sceneBuilder_ = new SceneBuilder(true); //contains helper functions to build the scene. Pass true to enable debugging features
+
+    this.stats_ = null;
+    this.clock_ = null;
+    this.worldOctree_ = null;
+    this.scene_ = null;
+    this.camera_ = null;
+
+    this.playerCollider_ = null;
+    this.playerVelocity_ = null;
+    this.playerDirection_ = null;
+    this.playerOnFloor_ = null;
+    this.mouseTime_ = null;
+    this.keyStates_ = null;
+
     this.initialize_();
   }
 
@@ -75,11 +90,9 @@ export class CollisionExample {
     this.stats_ = new Stats();
     this.clock_ = new THREE.Clock();
     this.worldOctree_ = new Octree();
-    this.scene_ = null;
-    this.camera_ = null;
 
     this.playerCollider_ = new Capsule(
-      new THREE.Vector3(0, 1.35, 0), //Start point of collision box
+      new THREE.Vector3(0, 1, 0), //Start point of collision box
       new THREE.Vector3(0, 2, 0), //End point
       0.35 //Radius
     );
@@ -184,6 +197,25 @@ export class CollisionExample {
     this.worldOctree_.fromGraphNode(wall4);
     this.worldOctree_.fromGraphNode(box);
 
+    // load_glb_object("zombie.glb", -2, 1.5, -2, this);
+    this.sceneBuilder_.load_glb_object(
+      "zombie.glb",
+      -2,
+      1.5,
+      -2,
+      this.scene_,
+      this.worldOctree_
+    );
+
+    this.sceneBuilder_.load_glb_object(
+      "wooden_chest.glb",
+      2,
+      1.5,
+      -2,
+      this.scene_,
+      this.worldOctree_
+    );
+
     // Create an OctreeHelper to visualize the octree
     const helper = new OctreeHelper(this.worldOctree_);
     helper.visible = false;
@@ -269,16 +301,12 @@ export class CollisionExample {
   }
 
   updatePlayer(deltaTime) {
-    let damping = Math.exp(-4 * deltaTime) - 1;
-
     if (!this.playerOnFloor_) {
       this.playerVelocity_.y -= GRAVITY * deltaTime;
-
-      // small air resistance
-      damping *= 0.2;
     }
 
-    this.playerVelocity_.addScaledVector(this.playerVelocity_, damping);
+    const damping = this.playerOnFloor_ ? 0.98 : 0.995;
+    this.playerVelocity_.multiplyScalar(damping);
 
     const deltaPosition = this.playerVelocity_
       .clone()
@@ -313,7 +341,7 @@ export class CollisionExample {
    */
   controls(deltaTime) {
     //Defines the speed of the player, this is lower when the player is in the air to give the player only a small amount of control in the air.
-    const speedDelta = deltaTime * (this.playerOnFloor_ ? 30 : 10);
+    const speedDelta = deltaTime * (this.playerOnFloor_ ? 35 : 12);
 
     if (this.keyStates_["KeyW"]) {
       this.playerVelocity_.add(
@@ -342,6 +370,20 @@ export class CollisionExample {
         this.playerVelocity_.y = 10;
       }
     }
+    // // Apply damping to reduce sliding effect
+    // const damping = this.playerOnFloor_ ? 0.9 : 0.99; // Stronger damping on the ground
+    // this.playerVelocity_.multiplyScalar(damping);
+
+    // // Ensure the player stops completely when no keys are pressed
+    // if (
+    //   !this.keyStates_["KeyW"] &&
+    //   !this.keyStates_["KeyS"] &&
+    //   !this.keyStates_["KeyA"] &&
+    //   !this.keyStates_["KeyD"]
+    // ) {
+    //   this.playerVelocity_.x *= damping;
+    //   this.playerVelocity_.z *= damping;
+    // }
   }
 
   teleportPlayerIfOob() {
@@ -362,7 +404,7 @@ export class CollisionExample {
     this.uiCamera_.right = this.camera_.aspect;
     this.uiCamera_.updateProjectionMatrix();
 
-    this.threejs_.setSize(window.innerWidth, window.innerHeight);
+    this.renderer_.setSize(window.innerWidth, window.innerHeight);
   }
 
   animate() {
@@ -390,5 +432,5 @@ export class CollisionExample {
 let _APP = null;
 
 window.addEventListener("DOMContentLoaded", () => {
-  _APP = new CollisionExample();
+  _APP = new Main();
 });
