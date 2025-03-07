@@ -5,20 +5,17 @@ import { OctreeHelper } from "three/addons/helpers/OctreeHelper.js";
 import { Capsule } from "three/addons/math/Capsule.js";
 import { GUI } from "three/addons/libs/lil-gui.module.min.js";
 import { SceneBuilder } from "./scripts/SceneBuilder";
-
+import { PlayerController } from "./scripts/PlayerController";
 /**
  * The Camera and collision code is based on the threejs example:
  * https://github.com/mrdoob/three.js/blob/master/examples/games_fps.html
  */
 
-const GRAVITY = 25;
 const STEPS_PER_FRAME = 5;
 
 export class Main {
   constructor(target) {
     this.target_ = target || document;
-
-    this.sceneBuilder_ = new SceneBuilder(true); //contains helper functions to build the scene. Pass true to enable debugging features
 
     this.stats_ = null;
     this.clock_ = null;
@@ -44,27 +41,6 @@ export class Main {
     this.initializeCamera_();
 
     document.body.appendChild(this.stats_.domElement);
-    //User input is stored in the keyStates so the animate functino can handle the input in next frame.
-    document.addEventListener("keydown", (event) => {
-      this.keyStates_[event.code] = true;
-    });
-
-    document.addEventListener("keyup", (event) => {
-      this.keyStates_[event.code] = false;
-    });
-
-    document.body.addEventListener("mousedown", () => {
-      document.body.requestPointerLock();
-
-      this.mouseTime_ = performance.now();
-    });
-
-    document.body.addEventListener("mousemove", (event) => {
-      if (document.pointerLockElement === document.body) {
-        this.camera_.rotation.y -= event.movementX / 500;
-        this.camera_.rotation.x -= event.movementY / 500;
-      }
-    });
 
     window.addEventListener(
       "resize",
@@ -90,17 +66,20 @@ export class Main {
     this.stats_ = new Stats();
     this.clock_ = new THREE.Clock();
     this.worldOctree_ = new Octree();
-
-    this.playerCollider_ = new Capsule(
-      new THREE.Vector3(0, 1, 0), //Start point of collision box
-      new THREE.Vector3(0, 2, 0), //End point
-      0.35 //Radius
+    this.scene_ = new THREE.Scene();
+    this.camera_ = new THREE.PerspectiveCamera(
+      70,
+      window.innerWidth / window.innerHeight,
+      0.1,
+      1000
     );
-    this.playerVelocity_ = new THREE.Vector3();
-    this.playerDirection_ = new THREE.Vector3();
-    this.playerOnFloor_ = false;
-    this.mouseTime_ = 0;
-    this.keyStates_ = {};
+
+    this.playerController_ = new PlayerController(
+      this.target_,
+      this.worldOctree_,
+      this.camera_
+    );
+    this.sceneBuilder_ = new SceneBuilder(true, this.worldOctree_, this.scene_); //contains helper functions to build the scene. Pass true to enable debugging features
   }
 
   // Example using the GLTFLoader to load a GLTF file
@@ -129,91 +108,85 @@ export class Main {
   //   });
   // }
   initializeScene_() {
-    this.scene_ = new THREE.Scene();
     this.scene_.background = new THREE.Color(0x88ccee);
-    this.scene_.fog = new THREE.Fog(0x88ccee, 0, 50);
 
-    const textureLoader = new THREE.TextureLoader();
-    const checkerboardTexture = textureLoader.load(
-      "/resources/checkerboard.png",
-      (texture) => {
-        texture.wrapS = THREE.RepeatWrapping;
-        texture.wrapT = THREE.RepeatWrapping;
-        texture.repeat.set(10, 10);
-      }
-    );
+    this.sceneBuilder_.create_room(new THREE.Vector3(0, 0, 0));
+    this.sceneBuilder_.create_room(new THREE.Vector3(0, 0, 1));
+    // const textureLoader = new THREE.TextureLoader();
+    // const checkerboardTexture = textureLoader.load(
+    //   "/resources/checkerboard.png",
+    //   (texture) => {
+    //     texture.wrapS = THREE.RepeatWrapping;
+    //     texture.wrapT = THREE.RepeatWrapping;
+    //     texture.repeat.set(10, 10);
+    //   }
+    // );
 
-    const floorGeometry = new THREE.PlaneGeometry(50, 50);
-    const floorMaterial = new THREE.MeshStandardMaterial({
-      map: checkerboardTexture,
-    });
-    const floor = new THREE.Mesh(floorGeometry, floorMaterial);
-    floor.rotation.x = -Math.PI / 2;
-    floor.receiveShadow = true;
-    this.scene_.add(floor);
+    // const floorGeometry = new THREE.PlaneGeometry(50, 50);
+    // const floorMaterial = new THREE.MeshStandardMaterial({
+    //   map: checkerboardTexture,
+    // });
+    // const floor = new THREE.Mesh(floorGeometry, floorMaterial);
+    // floor.rotation.x = -Math.PI / 2;
+    // floor.receiveShadow = true;
+    // this.scene_.add(floor);
 
-    const wallMaterial = new THREE.MeshStandardMaterial({ color: 0x808080 });
-    const wall1Geometry = new THREE.BoxGeometry(50, 10, 1);
-    const wall1 = new THREE.Mesh(wall1Geometry, wallMaterial);
-    wall1.position.set(0, 5, -25);
-    wall1.castShadow = true;
-    wall1.receiveShadow = true;
-    this.scene_.add(wall1);
+    // const wallMaterial = new THREE.MeshStandardMaterial({ color: 0x808080 });
+    // const wall1Geometry = new THREE.BoxGeometry(50, 10, 1);
+    // const wall1 = new THREE.Mesh(wall1Geometry, wallMaterial);
+    // wall1.position.set(0, 5, -25);
+    // wall1.castShadow = true;
+    // wall1.receiveShadow = true;
+    // this.scene_.add(wall1);
 
-    const wall2Geometry = new THREE.BoxGeometry(50, 10, 1);
-    const wall2 = new THREE.Mesh(wall2Geometry, wallMaterial);
-    wall2.position.set(0, 5, 25);
-    wall2.castShadow = true;
-    wall2.receiveShadow = true;
-    this.scene_.add(wall2);
+    // const wall2Geometry = new THREE.BoxGeometry(50, 10, 1);
+    // const wall2 = new THREE.Mesh(wall2Geometry, wallMaterial);
+    // wall2.position.set(0, 5, 25);
+    // wall2.castShadow = true;
+    // wall2.receiveShadow = true;
+    // this.scene_.add(wall2);
 
-    const wall3Geometry = new THREE.BoxGeometry(1, 10, 50);
-    const wall3 = new THREE.Mesh(wall3Geometry, wallMaterial);
-    wall3.position.set(-25, 5, 0);
-    wall3.castShadow = true;
-    wall3.receiveShadow = true;
-    this.scene_.add(wall3);
+    // const wall3Geometry = new THREE.BoxGeometry(1, 10, 50);
+    // const wall3 = new THREE.Mesh(wall3Geometry, wallMaterial);
+    // wall3.position.set(-25, 5, 0);
+    // wall3.castShadow = true;
+    // wall3.receiveShadow = true;
+    // this.scene_.add(wall3);
 
-    const wall4Geometry = new THREE.BoxGeometry(1, 10, 50);
-    const wall4 = new THREE.Mesh(wall4Geometry, wallMaterial);
-    wall4.position.set(25, 5, 0);
-    wall4.castShadow = true;
-    wall4.receiveShadow = true;
-    this.scene_.add(wall4);
+    // const wall4Geometry = new THREE.BoxGeometry(1, 10, 50);
+    // const wall4 = new THREE.Mesh(wall4Geometry, wallMaterial);
+    // wall4.position.set(25, 5, 0);
+    // wall4.castShadow = true;
+    // wall4.receiveShadow = true;
+    // this.scene_.add(wall4);
 
-    const boxGeometry = new THREE.BoxGeometry(5, 3, 5);
-    const boxMaterial = new THREE.MeshStandardMaterial({ color: 0xff0000 });
-    const box = new THREE.Mesh(boxGeometry, boxMaterial);
-    box.position.set(0, 0, 0); // Position the box in the middle
-    box.castShadow = true;
-    box.receiveShadow = true;
-    this.scene_.add(box);
+    // const boxGeometry = new THREE.BoxGeometry(5, 3, 5);
+    // const boxMaterial = new THREE.MeshStandardMaterial({ color: 0xff0000 });
+    // const box = new THREE.Mesh(boxGeometry, boxMaterial);
+    // box.position.set(0, 0, 0); // Position the box in the middle
+    // box.castShadow = true;
+    // box.receiveShadow = true;
+    // this.scene_.add(box);
 
-    // Add the floor, walls, and box to the octree for collision detection
-    this.worldOctree_.fromGraphNode(floor);
-    this.worldOctree_.fromGraphNode(wall1);
-    this.worldOctree_.fromGraphNode(wall2);
-    this.worldOctree_.fromGraphNode(wall3);
-    this.worldOctree_.fromGraphNode(wall4);
-    this.worldOctree_.fromGraphNode(box);
+    // // Add the floor, walls, and box to the octree for collision detection
+    // this.worldOctree_.fromGraphNode(floor);
+    // this.worldOctree_.fromGraphNode(wall1);
+    // this.worldOctree_.fromGraphNode(wall2);
+    // this.worldOctree_.fromGraphNode(wall3);
+    // this.worldOctree_.fromGraphNode(wall4);
+    // this.worldOctree_.fromGraphNode(box);
 
     // load_glb_object("zombie.glb", -2, 1.5, -2, this);
     this.sceneBuilder_.load_glb_object(
-      "zombie.glb",
-      -2,
-      1.5,
-      -2,
-      this.scene_,
-      this.worldOctree_
+      "glb/zombie.glb",
+      new THREE.Vector3(-2, 1.5, -2),
+      true,
+      new THREE.Vector3(0, -Math.PI / 4, 0)
     );
 
     this.sceneBuilder_.load_glb_object(
-      "wooden_chest.glb",
-      2,
-      1.5,
-      -2,
-      this.scene_,
-      this.worldOctree_
+      "glb/wooden_chest.glb",
+      new THREE.Vector3(2, 1.5, -2)
     );
 
     // Create an OctreeHelper to visualize the octree
@@ -250,12 +223,6 @@ export class Main {
   }
 
   initializeCamera_() {
-    this.camera_ = new THREE.PerspectiveCamera(
-      70,
-      window.innerWidth / window.innerHeight,
-      0.1,
-      1000
-    );
     this.camera_.position.set(0, 5, 10);
     this.camera_.rotation.order = "YXZ";
 
@@ -270,130 +237,6 @@ export class Main {
       1000
     );
     this.uiScene_ = new THREE.Scene();
-  }
-
-  /**
-   * Checks for intersections between playerCollider and objects in the world
-   */
-  playerCollisions() {
-    const result = this.worldOctree_.capsuleIntersect(this.playerCollider_);
-
-    this.playerOnFloor_ = false;
-
-    if (result) {
-      //If the y value of the normal is greater than 0, the player is on the floor
-      this.playerOnFloor_ = result.normal.y > 0;
-
-      if (!this.playerOnFloor_) {
-        this.playerVelocity_.addScaledVector(
-          result.normal,
-          -result.normal.dot(this.playerVelocity_)
-        );
-      } else {
-      }
-
-      if (result.depth >= 1e-10) {
-        this.playerCollider_.translate(
-          result.normal.multiplyScalar(result.depth)
-        );
-      }
-    }
-  }
-
-  updatePlayer(deltaTime) {
-    if (!this.playerOnFloor_) {
-      this.playerVelocity_.y -= GRAVITY * deltaTime;
-    }
-
-    const damping = this.playerOnFloor_ ? 0.98 : 0.995;
-    this.playerVelocity_.multiplyScalar(damping);
-
-    const deltaPosition = this.playerVelocity_
-      .clone()
-      .multiplyScalar(deltaTime);
-    this.playerCollider_.translate(deltaPosition);
-
-    this.playerCollisions();
-    this.camera_.position.copy(this.playerCollider_.end);
-  }
-
-  getForwardVector() {
-    this.camera_.getWorldDirection(this.playerDirection_);
-    this.playerDirection_.y = 0;
-    this.playerDirection_.normalize();
-
-    return this.playerDirection_;
-  }
-
-  getSideVector() {
-    this.camera_.getWorldDirection(this.playerDirection_);
-    this.playerDirection_.y = 0;
-    this.playerDirection_.normalize();
-    this.playerDirection_.cross(this.camera_.up);
-
-    return this.playerDirection_;
-  }
-
-  /**
-   * Calculates the player's movement based on the user input by mulpilying the velocity vector with the speedDelta.
-   *
-   * @param {*} deltaTime: time between frames
-   */
-  controls(deltaTime) {
-    //Defines the speed of the player, this is lower when the player is in the air to give the player only a small amount of control in the air.
-    const speedDelta = deltaTime * (this.playerOnFloor_ ? 35 : 12);
-
-    if (this.keyStates_["KeyW"]) {
-      this.playerVelocity_.add(
-        this.getForwardVector().multiplyScalar(speedDelta)
-      );
-    }
-
-    if (this.keyStates_["KeyS"]) {
-      this.playerVelocity_.add(
-        this.getForwardVector().multiplyScalar(-speedDelta)
-      );
-    }
-
-    if (this.keyStates_["KeyA"]) {
-      this.playerVelocity_.add(
-        this.getSideVector().multiplyScalar(-speedDelta)
-      );
-    }
-
-    if (this.keyStates_["KeyD"]) {
-      this.playerVelocity_.add(this.getSideVector().multiplyScalar(speedDelta));
-    }
-
-    if (this.playerOnFloor_) {
-      if (this.keyStates_["Space"]) {
-        this.playerVelocity_.y = 10;
-      }
-    }
-    // // Apply damping to reduce sliding effect
-    // const damping = this.playerOnFloor_ ? 0.9 : 0.99; // Stronger damping on the ground
-    // this.playerVelocity_.multiplyScalar(damping);
-
-    // // Ensure the player stops completely when no keys are pressed
-    // if (
-    //   !this.keyStates_["KeyW"] &&
-    //   !this.keyStates_["KeyS"] &&
-    //   !this.keyStates_["KeyA"] &&
-    //   !this.keyStates_["KeyD"]
-    // ) {
-    //   this.playerVelocity_.x *= damping;
-    //   this.playerVelocity_.z *= damping;
-    // }
-  }
-
-  teleportPlayerIfOob() {
-    if (this.camera_.position.y <= -25) {
-      this.playerCollider_.start.set(0, 0.35, 0);
-      this.playerCollider_.end.set(0, 1, 0);
-      this.playerCollider_.radius = 0.35;
-      this.camera_.position.copy(this.playerCollider_.end);
-      this.camera_.rotation.set(0, 0, 0);
-    }
   }
 
   onWindowResize_() {
@@ -415,11 +258,11 @@ export class Main {
     // an object traversing another too quickly for detection.
 
     for (let i = 0; i < STEPS_PER_FRAME; i++) {
-      this.controls(deltaTime);
+      this.playerController_.controls(deltaTime);
 
-      this.updatePlayer(deltaTime);
+      this.playerController_.updatePlayer(deltaTime);
 
-      this.teleportPlayerIfOob();
+      this.playerController_.teleportPlayerIfOob();
     }
 
     this.renderer_.render(this.uiScene_, this.uiCamera_);
