@@ -7,9 +7,10 @@ import {
   SphereGeometry,
 } from "three";
 import * as THREE from "https://cdn.skypack.dev/three@0.136";
+import { color, roughness } from "three/tsl";
 
 const ROOM_SIZE = 50;
-const ROOM_HEIGHT = 10;
+const ROOM_HEIGHT = 15;
 
 export class SceneBuilder {
   constructor(debugging = false, octree, scene) {
@@ -92,28 +93,22 @@ export class SceneBuilder {
   create_room(position) {
     const textureLoader = new THREE.TextureLoader();
     const floorTexture = textureLoader.load(
-      "/resources/textures/floor_tiles_1.jpg",
+      "/resources/textures/TilesCeramicWhite/2K/TilesCeramicWhite_BaseColor.jpg",
       (texture) => {
         texture.wrapS = THREE.RepeatWrapping;
         texture.wrapT = THREE.RepeatWrapping;
-        texture.repeat.set(10, 10);
+        texture.repeat.set(5, 5);
       }
     );
-    const ceilingTexture = textureLoader.load(
-      "/resources/textures/ceiling_1.jpg",
-      (texture) => {
-        texture.wrapS = THREE.RepeatWrapping;
-        texture.wrapT = THREE.RepeatWrapping;
-        texture.repeat.set(10, 10);
-      }
+
+    const normalMap = textureLoader.load(
+      "/resources/textures/TilesCeramicWhite/2K/TilesCeramicWhite_Normal.png"
     );
-    const wallTexture = textureLoader.load(
-      "/resources/textures/wall_bricks.jpg",
-      (texture) => {
-        texture.wrapS = THREE.RepeatWrapping;
-        texture.wrapT = THREE.RepeatWrapping;
-        // texture.repeat.set(10, 10);
-      }
+    const displacementMap = textureLoader.load(
+      "/resources/textures/TilesCeramicWhite/2K/TilesCeramicWhite_Displacement.png"
+    );
+    const roughnessMap = textureLoader.load(
+      "/resources/textures/TilesCeramicWhite/2K/TilesCeramicWhite_Roughness.jpg"
     );
 
     const offest = new THREE.Vector3(ROOM_SIZE, 0, ROOM_SIZE);
@@ -121,7 +116,14 @@ export class SceneBuilder {
 
     const floorGeometry = new THREE.PlaneGeometry(ROOM_SIZE, ROOM_SIZE);
     const floorMaterial = new THREE.MeshStandardMaterial({
+      color: 0x555555,
       map: floorTexture,
+      normalMap: normalMap,
+      normalScale: new THREE.Vector2(1, -1),
+      displacementMap: displacementMap,
+      displacementScale: 1,
+      roughnessMap: roughnessMap,
+      roughness: 1,
     });
     const floor = new THREE.Mesh(floorGeometry, floorMaterial);
     floor.rotation.x = -Math.PI / 2;
@@ -131,7 +133,7 @@ export class SceneBuilder {
 
     const ceilingGeometry = new THREE.PlaneGeometry(ROOM_SIZE, ROOM_SIZE);
     const ceilingMaterial = new THREE.MeshStandardMaterial({
-      map: ceilingTexture,
+      color: 0x222222,
       side: THREE.BackSide,
     });
     const ceiling = new THREE.Mesh(ceilingGeometry, ceilingMaterial);
@@ -140,7 +142,7 @@ export class SceneBuilder {
     ceiling.position.set(position.x, position.y + ROOM_HEIGHT, position.z);
     this.scene_.add(ceiling);
 
-    const wallMaterial = new THREE.MeshStandardMaterial({ map: wallTexture });
+    const wallMaterial = new THREE.MeshStandardMaterial({ color: 0xaaaaaa });
     const wall1Geometry = new THREE.BoxGeometry(ROOM_SIZE, ROOM_HEIGHT, 1);
     const wall1 = new THREE.Mesh(wall1Geometry, wallMaterial);
     wall1.position.set(position.x, ROOM_HEIGHT / 2, position.z - ROOM_SIZE / 2);
@@ -172,10 +174,26 @@ export class SceneBuilder {
     const boxGeometry = new THREE.BoxGeometry(5, 3, 5);
     const boxMaterial = new THREE.MeshStandardMaterial({ color: 0xff0000 });
     const box = new THREE.Mesh(boxGeometry, boxMaterial);
-    box.position.set(0, 0, 0); // Position the box in the middle
+    box.position.set(0, 0, 0);
     box.castShadow = true;
     box.receiveShadow = true;
     this.scene_.add(box);
+
+    const boxGeometry2 = new THREE.BoxGeometry(4, 5, 4);
+    const boxMaterial2 = new THREE.MeshStandardMaterial({ color: 0x444444 });
+    const box2 = new THREE.Mesh(boxGeometry2, boxMaterial2);
+    box2.position.set(-2, 0, -7);
+    box2.castShadow = true;
+    box2.receiveShadow = true;
+    this.scene_.add(box2);
+
+    const boxGeometry3 = new THREE.BoxGeometry(4, 8, 4);
+    const boxMaterial3 = new THREE.MeshStandardMaterial({ color: 0x666666 });
+    const box3 = new THREE.Mesh(boxGeometry3, boxMaterial3);
+    box3.position.set(-15, 0, -18);
+    box3.castShadow = true;
+    box3.receiveShadow = true;
+    this.scene_.add(box3);
 
     // Add the floor, walls, and box to the octree for collision detection
     this.worldOctree_.fromGraphNode(floor);
@@ -185,5 +203,7 @@ export class SceneBuilder {
     this.worldOctree_.fromGraphNode(wall3);
     this.worldOctree_.fromGraphNode(wall4);
     this.worldOctree_.fromGraphNode(box);
+    this.worldOctree_.fromGraphNode(box2);
+    this.worldOctree_.fromGraphNode(box3);
   }
 }

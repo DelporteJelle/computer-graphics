@@ -2,8 +2,8 @@ import { Capsule } from "three/addons/math/Capsule.js";
 import * as THREE from "https://cdn.skypack.dev/three@0.136";
 
 const GRAVITY = 20;
-const JUMP_HEIGHT = 10;
-const MAX_SPEED = 10;
+const JUMP_HEIGHT = 14;
+const MAX_SPEED = 8;
 
 const CAMERA_ANGLE_CAP = Math.PI / 2.3;
 // const GRAVITY = 0;
@@ -47,7 +47,7 @@ export class PlayerController {
         this.camera_.rotation.x -= event.movementY / 500;
         this.camera_.rotation.x = Math.max(
           -CAMERA_ANGLE_CAP,
-          Math.min(CAMERA_ANGLE_CAP , this.camera_.rotation.x)
+          Math.min(CAMERA_ANGLE_CAP, this.camera_.rotation.x)
         );
       }
     });
