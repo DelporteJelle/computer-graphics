@@ -1,7 +1,11 @@
 import { Capsule } from "three/addons/math/Capsule.js";
 import * as THREE from "https://cdn.skypack.dev/three@0.136";
 
-const GRAVITY = 25;
+const GRAVITY = 20;
+const JUMP_HEIGHT = 10;
+const MAX_SPEED = 10;
+
+const CAMERA_ANGLE_CAP = Math.PI / 2.3;
 // const GRAVITY = 0;
 
 export class PlayerController {
@@ -41,6 +45,10 @@ export class PlayerController {
       if (document.pointerLockElement === document.body) {
         this.camera_.rotation.y -= event.movementX / 500;
         this.camera_.rotation.x -= event.movementY / 500;
+        this.camera_.rotation.x = Math.max(
+          -CAMERA_ANGLE_CAP,
+          Math.min(CAMERA_ANGLE_CAP , this.camera_.rotation.x)
+        );
       }
     });
   }
@@ -77,8 +85,10 @@ export class PlayerController {
       this.playerVelocity_.y -= GRAVITY * deltaTime;
     }
 
-    const damping = this.playerOnFloor_ ? 0.98 : 0.995;
+    const damping = this.playerOnFloor_ ? 0.95 : 0.995;
     this.playerVelocity_.multiplyScalar(damping);
+    //Cap the player speed to a maximum of 10
+    this.playerVelocity_.clampLength(0, MAX_SPEED);
 
     const deltaPosition = this.playerVelocity_
       .clone()
@@ -113,7 +123,7 @@ export class PlayerController {
    */
   controls(deltaTime) {
     //Defines the speed of the player, this is lower when the player is in the air to give the player only a small amount of control in the air.
-    const speedDelta = deltaTime * (this.playerOnFloor_ ? 35 : 12);
+    const speedDelta = deltaTime * (this.playerOnFloor_ ? 100 : 12);
 
     if (this.keyStates_["KeyW"]) {
       this.playerVelocity_.add(
@@ -139,23 +149,9 @@ export class PlayerController {
 
     if (this.playerOnFloor_) {
       if (this.keyStates_["Space"]) {
-        this.playerVelocity_.y = 10;
+        this.playerVelocity_.y = JUMP_HEIGHT;
       }
     }
-    // // Apply damping to reduce sliding effect
-    // const damping = this.playerOnFloor_ ? 0.9 : 0.99; // Stronger damping on the ground
-    // this.playerVelocity_.multiplyScalar(damping);
-
-    // // Ensure the player stops completely when no keys are pressed
-    // if (
-    //   !this.keyStates_["KeyW"] &&
-    //   !this.keyStates_["KeyS"] &&
-    //   !this.keyStates_["KeyA"] &&
-    //   !this.keyStates_["KeyD"]
-    // ) {
-    //   this.playerVelocity_.x *= damping;
-    //   this.playerVelocity_.z *= damping;
-    // }
   }
 
   teleportPlayerIfOob() {

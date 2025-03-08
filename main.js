@@ -250,19 +250,40 @@ export class Main {
     this.renderer_.setSize(window.innerWidth, window.innerHeight);
   }
 
+  // animate() {
+  //   //Times between frames
+  //   const deltaTime = Math.min(0.05, this.clock_.getDelta()) / STEPS_PER_FRAME;
+
+  //   // we look for collisions in substeps to mitigate the risk of
+  //   // an object traversing another too quickly for detection.
+
+  //   for (let i = 0; i < STEPS_PER_FRAME; i++) {
+  //     this.playerController_.controls(deltaTime);
+
+  //     this.playerController_.updatePlayer(deltaTime);
+
+  //     this.playerController_.teleportPlayerIfOob();
+  //   }
+
+  //   this.renderer_.render(this.uiScene_, this.uiCamera_);
+  //   this.renderer_.render(this.scene_, this.camera_);
+
+  //   this.stats_.update();
+  // }
   animate() {
-    //Times between frames
-    const deltaTime = Math.min(0.05, this.clock_.getDelta()) / STEPS_PER_FRAME;
+    const FIXED_TIMESTEP = 1 / 120; // Fixed timestep of 60 FPS so physics are not tied to framerate
+    const MAX_TIMESTEP = 0.1; // Maximum timestep to avoid spiral of death
 
-    // we look for collisions in substeps to mitigate the risk of
-    // an object traversing another too quickly for detection.
+    let deltaTime = this.clock_.getDelta();
+    deltaTime = Math.min(deltaTime, MAX_TIMESTEP);
 
-    for (let i = 0; i < STEPS_PER_FRAME; i++) {
-      this.playerController_.controls(deltaTime);
+    this.accumulator_ = (this.accumulator_ || 0) + deltaTime;
 
-      this.playerController_.updatePlayer(deltaTime);
-
+    while (this.accumulator_ >= FIXED_TIMESTEP) {
+      this.playerController_.controls(FIXED_TIMESTEP);
+      this.playerController_.updatePlayer(FIXED_TIMESTEP);
       this.playerController_.teleportPlayerIfOob();
+      this.accumulator_ -= FIXED_TIMESTEP;
     }
 
     this.renderer_.render(this.uiScene_, this.uiCamera_);

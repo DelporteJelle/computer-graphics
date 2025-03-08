@@ -8,7 +8,7 @@ import {
 } from "three";
 import * as THREE from "https://cdn.skypack.dev/three@0.136";
 
-const ROOM_SIZE = 30;
+const ROOM_SIZE = 50;
 const ROOM_HEIGHT = 10;
 
 export class SceneBuilder {
@@ -91,12 +91,28 @@ export class SceneBuilder {
    */
   create_room(position) {
     const textureLoader = new THREE.TextureLoader();
-    const checkerboardTexture = textureLoader.load(
-      "/resources/checkerboard.png",
+    const floorTexture = textureLoader.load(
+      "/resources/textures/floor_tiles_1.jpg",
       (texture) => {
         texture.wrapS = THREE.RepeatWrapping;
         texture.wrapT = THREE.RepeatWrapping;
         texture.repeat.set(10, 10);
+      }
+    );
+    const ceilingTexture = textureLoader.load(
+      "/resources/textures/ceiling_1.jpg",
+      (texture) => {
+        texture.wrapS = THREE.RepeatWrapping;
+        texture.wrapT = THREE.RepeatWrapping;
+        texture.repeat.set(10, 10);
+      }
+    );
+    const wallTexture = textureLoader.load(
+      "/resources/textures/wall_bricks.jpg",
+      (texture) => {
+        texture.wrapS = THREE.RepeatWrapping;
+        texture.wrapT = THREE.RepeatWrapping;
+        // texture.repeat.set(10, 10);
       }
     );
 
@@ -105,7 +121,7 @@ export class SceneBuilder {
 
     const floorGeometry = new THREE.PlaneGeometry(ROOM_SIZE, ROOM_SIZE);
     const floorMaterial = new THREE.MeshStandardMaterial({
-      map: checkerboardTexture,
+      map: floorTexture,
     });
     const floor = new THREE.Mesh(floorGeometry, floorMaterial);
     floor.rotation.x = -Math.PI / 2;
@@ -115,7 +131,7 @@ export class SceneBuilder {
 
     const ceilingGeometry = new THREE.PlaneGeometry(ROOM_SIZE, ROOM_SIZE);
     const ceilingMaterial = new THREE.MeshStandardMaterial({
-      map: checkerboardTexture,
+      map: ceilingTexture,
       side: THREE.BackSide,
     });
     const ceiling = new THREE.Mesh(ceilingGeometry, ceilingMaterial);
@@ -124,7 +140,7 @@ export class SceneBuilder {
     ceiling.position.set(position.x, position.y + ROOM_HEIGHT, position.z);
     this.scene_.add(ceiling);
 
-    const wallMaterial = new THREE.MeshStandardMaterial({ color: 0x808080 });
+    const wallMaterial = new THREE.MeshStandardMaterial({ map: wallTexture });
     const wall1Geometry = new THREE.BoxGeometry(ROOM_SIZE, ROOM_HEIGHT, 1);
     const wall1 = new THREE.Mesh(wall1Geometry, wallMaterial);
     wall1.position.set(position.x, ROOM_HEIGHT / 2, position.z - ROOM_SIZE / 2);
