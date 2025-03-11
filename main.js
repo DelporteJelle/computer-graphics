@@ -7,6 +7,7 @@ import { GUI } from "three/addons/libs/lil-gui.module.min.js";
 import { SceneBuilder } from "./scripts/SceneBuilder";
 import { PlayerController } from "./scripts/PlayerController";
 import { DirectionalLightHelper } from "three";
+import { MazeGenerator } from "./scripts/MazeGenerator";
 
 /**
  * The Camera and collision code is based on the threejs example:
@@ -14,6 +15,8 @@ import { DirectionalLightHelper } from "three";
  */
 
 const STEPS_PER_FRAME = 5;
+const MAZE_WIDTH = 10;
+const MAZE_DEPTH = 10;
 
 export class Main {
   constructor(target) {
@@ -31,6 +34,9 @@ export class Main {
     this.playerOnFloor_ = null;
     this.mouseTime_ = null;
     this.keyStates_ = null;
+
+    this.sceneBuilder_ = null;
+    this.mazeGenerator_ = null;
 
     this.initialize_();
   }
@@ -82,6 +88,7 @@ export class Main {
       this.camera_
     );
     this.sceneBuilder_ = new SceneBuilder(true, this.worldOctree_, this.scene_); //contains helper functions to build the scene. Pass true to enable debugging features
+    this.mazeGenerator_ = new MazeGenerator(MAZE_WIDTH, MAZE_DEPTH); //Generates a maze with 10x10 tiles
   }
 
   // Example using the GLTFLoader to load a GLTF file
@@ -112,71 +119,34 @@ export class Main {
   initializeScene_() {
     this.scene_.background = new THREE.Color(0x88ccee);
 
-    this.sceneBuilder_.create_room(new THREE.Vector3(0, 0, 0));
-    this.sceneBuilder_.create_room(new THREE.Vector3(0, 0, 1));
-    // const textureLoader = new THREE.TextureLoader();
-    // const checkerboardTexture = textureLoader.load(
-    //   "/resources/checkerboard.png",
-    //   (texture) => {
-    //     texture.wrapS = THREE.RepeatWrapping;
-    //     texture.wrapT = THREE.RepeatWrapping;
-    //     texture.repeat.set(10, 10);
+    // this.mazeGenerator_.generateMaze().then(() => {
+    //   for (let i = 0; i < MAZE_WIDTH; i++) {
+    //     for (let j = 0; j < MAZE_DEPTH; j++) {
+    //       this.sceneBuilder_.create_room(
+    //         this.mazeGenerator_.tiles[i][j].position,
+    //         this.mazeGenerator_.tiles[i][j].N,
+    //         this.mazeGenerator_.tiles[i][j].E,
+    //         this.mazeGenerator_.tiles[i][j].S,
+    //         this.mazeGenerator_.tiles[i][j].W
+    //       );
+    //     }
     //   }
-    // );
-
-    // const floorGeometry = new THREE.PlaneGeometry(50, 50);
-    // const floorMaterial = new THREE.MeshStandardMaterial({
-    //   map: checkerboardTexture,
     // });
-    // const floor = new THREE.Mesh(floorGeometry, floorMaterial);
-    // floor.rotation.x = -Math.PI / 2;
-    // floor.receiveShadow = true;
-    // this.scene_.add(floor);
 
-    // const wallMaterial = new THREE.MeshStandardMaterial({ color: 0x808080 });
-    // const wall1Geometry = new THREE.BoxGeometry(50, 10, 1);
-    // const wall1 = new THREE.Mesh(wall1Geometry, wallMaterial);
-    // wall1.position.set(0, 5, -25);
-    // wall1.castShadow = true;
-    // wall1.receiveShadow = true;
-    // this.scene_.add(wall1);
-
-    // const wall2Geometry = new THREE.BoxGeometry(50, 10, 1);
-    // const wall2 = new THREE.Mesh(wall2Geometry, wallMaterial);
-    // wall2.position.set(0, 5, 25);
-    // wall2.castShadow = true;
-    // wall2.receiveShadow = true;
-    // this.scene_.add(wall2);
-
-    // const wall3Geometry = new THREE.BoxGeometry(1, 10, 50);
-    // const wall3 = new THREE.Mesh(wall3Geometry, wallMaterial);
-    // wall3.position.set(-25, 5, 0);
-    // wall3.castShadow = true;
-    // wall3.receiveShadow = true;
-    // this.scene_.add(wall3);
-
-    // const wall4Geometry = new THREE.BoxGeometry(1, 10, 50);
-    // const wall4 = new THREE.Mesh(wall4Geometry, wallMaterial);
-    // wall4.position.set(25, 5, 0);
-    // wall4.castShadow = true;
-    // wall4.receiveShadow = true;
-    // this.scene_.add(wall4);
-
-    // const boxGeometry = new THREE.BoxGeometry(5, 3, 5);
-    // const boxMaterial = new THREE.MeshStandardMaterial({ color: 0xff0000 });
-    // const box = new THREE.Mesh(boxGeometry, boxMaterial);
-    // box.position.set(0, 0, 0); // Position the box in the middle
-    // box.castShadow = true;
-    // box.receiveShadow = true;
-    // this.scene_.add(box);
-
-    // // Add the floor, walls, and box to the octree for collision detection
-    // this.worldOctree_.fromGraphNode(floor);
-    // this.worldOctree_.fromGraphNode(wall1);
-    // this.worldOctree_.fromGraphNode(wall2);
-    // this.worldOctree_.fromGraphNode(wall3);
-    // this.worldOctree_.fromGraphNode(wall4);
-    // this.worldOctree_.fromGraphNode(box);
+    this.sceneBuilder_.create_room(
+      new THREE.Vector3(0, 0, 0),
+      true,
+      true,
+      false,
+      true
+    );
+    this.sceneBuilder_.create_room(
+      new THREE.Vector3(0, 0, 1),
+      false,
+      false,
+      false,
+      false
+    );
 
     // load_glb_object("zombie.glb", -2, 1.5, -2, this);
     this.sceneBuilder_.load_glb_object(
@@ -208,6 +178,8 @@ export class Main {
     this.scene_.add(ambientLight);
 
     const pointLight = new THREE.PointLight(0xffffff, 1, 100);
+    pointLight.shadow.camera.near = 0.1;
+    pointLight.shadow.camera.far = 100;
     pointLight.shadow.mapSize.width = 1024;
     pointLight.shadow.mapSize.height = 1024;
     pointLight.position.set(-5, 13, -1);
@@ -226,7 +198,7 @@ export class Main {
 
     const aspect = 1920 / 1080;
     //Can be used to add UI elements (such as minimap, crosshair, etc.)
-    this.uiCamera_ = new THREE.OrthographicCamera(
+    this.uiCamera_ = new THREE.PerspectiveCamera(
       -1,
       1,
       1 * aspect,
