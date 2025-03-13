@@ -1,15 +1,20 @@
 import { Capsule } from "three/addons/math/Capsule.js";
 import * as THREE from "https://cdn.skypack.dev/three@0.136";
 
-const GRAVITY = 20;
-const JUMP_HEIGHT = 14;
-const MAX_SPEED = 8;
-
-const CAMERA_ANGLE_CAP = Math.PI / 2.3;
-// const GRAVITY = 0;
-
 export class PlayerController {
-  constructor(target, octree, camera) {
+  constructor(
+    target,
+    octree,
+    camera,
+    GRAVITY,
+    JUMP_HEIGHT,
+    MAX_SPEED,
+    CAMERA_ANGLE_CAP
+  ) {
+    this.GRAVITY = GRAVITY;
+    this.JUMP_HEIGHT = JUMP_HEIGHT;
+    this.MAX_SPEED = MAX_SPEED;
+    this.CAMERA_ANGLE_CAP = CAMERA_ANGLE_CAP;
     this.worldOctree_ = octree;
     this.target_ = target || document;
     this.camera_ = camera;
@@ -46,8 +51,8 @@ export class PlayerController {
         this.camera_.rotation.y -= event.movementX / 500;
         this.camera_.rotation.x -= event.movementY / 500;
         this.camera_.rotation.x = Math.max(
-          -CAMERA_ANGLE_CAP,
-          Math.min(CAMERA_ANGLE_CAP, this.camera_.rotation.x)
+          -this.CAMERA_ANGLE_CAP,
+          Math.min(this.CAMERA_ANGLE_CAP, this.camera_.rotation.x)
         );
       }
     });
@@ -82,13 +87,13 @@ export class PlayerController {
   }
   updatePlayer(deltaTime) {
     if (!this.playerOnFloor_) {
-      this.playerVelocity_.y -= GRAVITY * deltaTime;
+      this.playerVelocity_.y -= this.GRAVITY * deltaTime;
     }
 
     const damping = this.playerOnFloor_ ? 0.95 : 0.995;
     this.playerVelocity_.multiplyScalar(damping);
     //Cap the player speed to a maximum of 10
-    this.playerVelocity_.clampLength(0, MAX_SPEED);
+    this.playerVelocity_.clampLength(0, this.MAX_SPEED);
 
     const deltaPosition = this.playerVelocity_
       .clone()
@@ -149,7 +154,7 @@ export class PlayerController {
 
     if (this.playerOnFloor_) {
       if (this.keyStates_["Space"]) {
-        this.playerVelocity_.y = JUMP_HEIGHT;
+        this.playerVelocity_.y = this.JUMP_HEIGHT;
       }
     }
   }
