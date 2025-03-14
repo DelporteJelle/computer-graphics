@@ -1,4 +1,5 @@
 import * as THREE from "https://cdn.skypack.dev/three@0.136";
+import { max } from "three/tsl";
 
 export class MazeGeneratorVariant {
   constructor(width, depth) {
@@ -18,12 +19,16 @@ export class MazeGeneratorVariant {
     this.tiles[0][0].start = true;
     this.tiles[0][0].distance_to_start = 0;
     this.tiles[0][0].hall_id = 0;
+    this.tiles[0][0].visited = true;
   }
 
   generateMaze() {
     return new Promise((resolve) => {
       console.log("Generating maze...");
       let hall_id = 1;
+      let max_distance = 0;
+      let max_distance_tile = this.tiles[0][0];
+      let max_hall_id = 0;
 
       while (this.stack.length > 0) {
         //Get first tile from the stack and check if it has any unvisited neighbors
@@ -38,22 +43,51 @@ export class MazeGeneratorVariant {
             ];
 
           this.removeWall(current, next);
-
-          next.visited = true;
           next.hall_id = hall_id;
           next.distance_to_start = current.distance_to_start + 1;
+          next.visited = true;
+
+          if (next.distance_to_start > max_distance) {
+            max_distance = next.distance_to_start;
+            max_distance_tile = next;
+          }
 
           if (unvisitedNeighbors.length > 1) {
             this.stack.push(current);
-          }else{
+          } else {
             hall_id++;
+          }
+          if (hall_id > max_hall_id) {
+            max_hall_id = hall_id;
           }
           this.stack.push(next);
         }
       }
 
-      //Open up a random wall in each column and row to make the maze more open
-      //TODO
+      max_distance_tile.end = true;
+
+      //Remove walls between hallways to create loops, by using the hall_id property. The smaller the difference between hall_id, the closer the hallways are towards each other
+      //We can use the amound of difference to control how big the "shortcuts" may be.
+      for (let i = 0; i < this.width; i++) {
+        for (let j = 0; j < this.depth; j++) {
+          let tile = this.tiles[i][j];
+          if (tile.has_shortcut) continue;
+          let neighbors = this.getNeighbors(tile);
+          for (let neighbor of neighbors) {
+            if (
+              !neighbor.has_shortcut &&
+              Math.abs(tile.hall_id - neighbor.hall_id) > 6 &&
+              Math.abs(tile.hall_id - neighbor.hall_id) < max_hall_id / 5
+            ) {
+              if (Math.random() > 0.5) {
+                tile.has_shortcut = true;
+                neighbor.has_shortcut = true;
+                this.removeWall(tile, neighbor);
+              }
+            }
+          }
+        }
+      }
 
       this.printMaze();
       resolve();
@@ -65,11 +99,41 @@ export class MazeGeneratorVariant {
       let row = "";
       for (let j = 0; j < this.tiles[i].length; j++) {
         let t = this.tiles[i][j];
-        t.W ? (row += "|") : (row += " ");
-        t.N && t.S ? (row += "=") : t.N || t.S ? (row += "-") : (row += " ");
-        t.E ? (row += "|") : (row += " ");
+        row += "|";
+        // row += t.distance_to_start.toString().padStart(3, " ");
+        if (t.has_shortcut) {
+          // Add red and bold formatting using ANSI escape codes
+          row += `\x1b[1m\x1b[31m${t.hall_id
+            .toString()
+            .padStart(3, " ")}\x1b[0m`;
+        } else {
+          row += t.hall_id.toString().padStart(3, " ");
+        }
+      }
+      console.log(row);
+    }
+  }
+
+  getNeighbors(tile) {
+    let locs = [
+      { x: tile.x, y: tile.y - 1 },
+      { x: tile.x, y: tile.y + 1 },
+      { x: tile.x - 1, y: tile.y },
+      { x: tile.x + 1, y: tile.y },
+    ];
+    let neigbors = [];
+    for (let loc of locs) {
+      if (
+        loc.x >= 0 &&
+        loc.x < this.width &&
+        loc.y >= 0 &&
+        loc.y < this.depth
+      ) {
+        let neighbor = this.tiles[loc.x][loc.y];
+        neigbors.push(neighbor);
       }
     }
+    return neigbors;
   }
 
   removeWall(tile1, tile2) {
@@ -121,10 +185,11 @@ export class Tile {
   constructor(x, y) {
     //Properties used for generation
     this.visited = false;
-    this.hall_id = -1;//Hallway ID
-    this.distance_to_start = -1;//Distance from this tile to the start tile
+    this.hall_id = -1; //Hallway ID
+    this.distance_to_start = -1; //Distance from this tile to the start tile
     this.x = x;
     this.y = y;
+    this.has_shortcut = false;
 
     //Properties used for rendering
     this.N = true;

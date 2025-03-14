@@ -17,9 +17,9 @@ import { MazeGeneratorVariant } from "./scripts/MazeGeneratorVariant";
 
 const STEPS_PER_FRAME = 5;
 const MAZE_WIDTH = 15;
-const MAZE_DEPTH = 20;
-const ROOM_SIZE = 10;
-const ROOM_HEIGHT = 5;
+const MAZE_DEPTH = 10;
+const ROOM_SIZE = 20;
+const ROOM_HEIGHT = 10;
 
 const GRAVITY = 20;
 const JUMP_HEIGHT = 14;
@@ -143,19 +143,6 @@ export class Main {
   initializeScene_() {
     this.scene_.background = new THREE.Color(0x88ccee);
 
-    // this.mazeGenerator_.generateMaze().then(() => {
-    //   for (let i = 0; i < MAZE_WIDTH; i++) {
-    //     for (let j = 0; j < MAZE_DEPTH; j++) {
-    //       this.sceneBuilder_.create_room(
-    //         this.mazeGenerator_.tiles[i][j].position,
-    //         this.mazeGenerator_.tiles[i][j].N,
-    //         this.mazeGenerator_.tiles[i][j].E,
-    //         this.mazeGenerator_.tiles[i][j].S,
-    //         this.mazeGenerator_.tiles[i][j].W
-    //       );
-    //     }
-    //   }
-    // });
     this.mazeGeneratorVariant_.generateMaze().then(() => {
       for (let i = 0; i < MAZE_WIDTH; i++) {
         for (let j = 0; j < MAZE_DEPTH; j++) {
@@ -167,7 +154,8 @@ export class Main {
             j == MAZE_DEPTH - 1 ? true : false, //Only place South wall if it's the last tile in the column
             tile.W,
             tile.start,
-            tile.end
+            tile.end,
+            tile
           );
         }
       }
@@ -216,7 +204,7 @@ export class Main {
   }
 
   initializeLights_() {
-    const ambientLight = new THREE.AmbientLight(0xfffffff, 0.2);
+    const ambientLight = new THREE.AmbientLight(0xfffffff, 0.5);
     this.scene_.add(ambientLight);
 
     const pointLight = new THREE.PointLight(0xffffff, 1, 100);
