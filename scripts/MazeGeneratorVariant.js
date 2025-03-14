@@ -16,14 +16,21 @@ export class MazeGeneratorVariant {
     }
     this.stack.push(this.tiles[0][0]);
     this.tiles[0][0].start = true;
+    this.tiles[0][0].distance_to_start = 0;
+    this.tiles[0][0].hall_id = 0;
   }
 
   generateMaze() {
     return new Promise((resolve) => {
       console.log("Generating maze...");
+      let hall_id = 1;
+
       while (this.stack.length > 0) {
+        //Get first tile from the stack and check if it has any unvisited neighbors
         let current = this.stack.pop();
         let unvisitedNeighbors = this.getUnvisitedNeighbors(current);
+
+        //If it has unvisited neighbors, pick one at random, remove the wall between them, and add it to the stack
         if (unvisitedNeighbors.length > 0) {
           let next =
             unvisitedNeighbors[
@@ -33,8 +40,13 @@ export class MazeGeneratorVariant {
           this.removeWall(current, next);
 
           next.visited = true;
+          next.hall_id = hall_id;
+          next.distance_to_start = current.distance_to_start + 1;
+
           if (unvisitedNeighbors.length > 1) {
             this.stack.push(current);
+          }else{
+            hall_id++;
           }
           this.stack.push(next);
         }
@@ -107,14 +119,19 @@ export class MazeGeneratorVariant {
 
 export class Tile {
   constructor(x, y) {
+    //Properties used for generation
     this.visited = false;
+    this.hall_id = -1;//Hallway ID
+    this.distance_to_start = -1;//Distance from this tile to the start tile
     this.x = x;
     this.y = y;
+
+    //Properties used for rendering
     this.N = true;
     this.S = true;
     this.E = true;
     this.W = true;
-    this.end = false;
-    this.start = false;
+    this.end = false; //True for the end tile
+    this.start = false; //True for the start tile
   }
 }
