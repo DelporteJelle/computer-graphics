@@ -90,6 +90,7 @@ export class SceneBuilder {
    * @param {THREE.Vector3} position //This is the position relative to the grid so (0, 0, 0) is center, (1, 0, 0) is right, etc.
    */
   create_room(position, N, E, S, W, start = false, end = false, tile) {
+    const wall_depth = 0.2;
     const textureLoader = new THREE.TextureLoader();
     const floorTexture = textureLoader.load(
       "/resources/textures/TilesCeramicWhite/2K/TilesCeramicWhite_BaseColor.jpg",
@@ -141,7 +142,7 @@ export class SceneBuilder {
     const wallMaterial = new THREE.MeshStandardMaterial({ color: 0xaaaaaa });
     if (N) {
       this.createMesh(
-        new THREE.BoxGeometry(this.ROOM_SIZE, this.ROOM_HEIGHT, 1),
+        new THREE.BoxGeometry(this.ROOM_SIZE, this.ROOM_HEIGHT, wall_depth),
         wallMaterial,
         new THREE.Vector3(
           position.x,
@@ -152,7 +153,7 @@ export class SceneBuilder {
     }
     if (S) {
       this.createMesh(
-        new THREE.BoxGeometry(this.ROOM_SIZE, this.ROOM_HEIGHT, 1),
+        new THREE.BoxGeometry(this.ROOM_SIZE, this.ROOM_HEIGHT, wall_depth),
         wallMaterial,
         new THREE.Vector3(
           position.x,
@@ -163,7 +164,7 @@ export class SceneBuilder {
     }
     if (W) {
       this.createMesh(
-        new THREE.BoxGeometry(1, this.ROOM_HEIGHT, this.ROOM_SIZE),
+        new THREE.BoxGeometry(wall_depth, this.ROOM_HEIGHT, this.ROOM_SIZE),
         wallMaterial,
         new THREE.Vector3(
           position.x - this.ROOM_SIZE / 2,
@@ -174,7 +175,7 @@ export class SceneBuilder {
     }
     if (E) {
       this.createMesh(
-        new THREE.BoxGeometry(1, this.ROOM_HEIGHT, this.ROOM_SIZE),
+        new THREE.BoxGeometry(wall_depth, this.ROOM_HEIGHT, this.ROOM_SIZE),
         wallMaterial,
         new THREE.Vector3(
           position.x + this.ROOM_SIZE / 2,
@@ -184,9 +185,10 @@ export class SceneBuilder {
       );
     }
 
+    //Meshes for debugging purposes
     if (start) {
       this.createMesh(
-        new THREE.BoxGeometry(this.ROOM_SIZE, 0.2, this.ROOM_SIZE),
+        new THREE.BoxGeometry(this.ROOM_SIZE, 0.01, this.ROOM_SIZE),
         new THREE.MeshStandardMaterial({
           color: 0x00ff00,
         }),
@@ -195,16 +197,24 @@ export class SceneBuilder {
     }
     if (end) {
       this.createMesh(
-        new THREE.BoxGeometry(this.ROOM_SIZE, 0.2, this.ROOM_SIZE),
+        new THREE.BoxGeometry(this.ROOM_SIZE, 0.01, this.ROOM_SIZE),
         new THREE.MeshStandardMaterial({
           color: 0xff0000,
         }),
         new THREE.Vector3(position.x, 0, position.z)
       );
     }
-    //Mesh for debugging purposes
+    // if (tile.has_shortcut) {
+    //   this.createMesh(
+    //     new THREE.BoxGeometry(this.ROOM_SIZE, 0.01, this.ROOM_SIZE),
+    //     new THREE.MeshStandardMaterial({
+    //       color: 0x0000ff,
+    //     }),
+    //     new THREE.Vector3(position.x, 0, position.z)
+    //   );
+    // }
     // this.createMesh(
-    //   new THREE.SphereGeometry(0.5, 10, 10),
+    //   new THREE.SphereGeometry(0.1, 10, 10),
     //   new THREE.MeshStandardMaterial({
     //     color: new THREE.Color().lerpColors(
     //       new THREE.Color(0x0000ff), // Blue for close distances

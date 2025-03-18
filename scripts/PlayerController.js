@@ -7,21 +7,24 @@ export class PlayerController {
     octree,
     camera,
     GRAVITY,
-    JUMP_HEIGHT,
+    JUMP_FORCE,
     MAX_SPEED,
-    CAMERA_ANGLE_CAP
+    CAMERA_ANGLE_CAP,
+    SpawnPosition
   ) {
     this.GRAVITY = GRAVITY;
-    this.JUMP_HEIGHT = JUMP_HEIGHT;
+    this.JUMP_FORCE = JUMP_FORCE;
     this.MAX_SPEED = MAX_SPEED;
     this.CAMERA_ANGLE_CAP = CAMERA_ANGLE_CAP;
     this.worldOctree_ = octree;
     this.target_ = target || document;
     this.camera_ = camera;
+    this.hasDoubleJump = true;
+    this.JUMP_COOLDOWN = 300;
 
     this.playerCollider_ = new Capsule(
-      new THREE.Vector3(0, 1, 0), //Start point of collision box
-      new THREE.Vector3(0, 2, 0), //End point
+      new THREE.Vector3(SpawnPosition.x, 1, SpawnPosition.y), //Start point of collision box
+      new THREE.Vector3(SpawnPosition.x, 2, SpawnPosition.y), //End point
       0.35 //Radius
     );
 
@@ -90,7 +93,7 @@ export class PlayerController {
       this.playerVelocity_.y -= this.GRAVITY * deltaTime;
     }
 
-    const damping = this.playerOnFloor_ ? 0.95 : 0.995;
+    const damping = this.playerOnFloor_ ? 0.92 : 0.998;
     this.playerVelocity_.multiplyScalar(damping);
     //Cap the player speed to a maximum of 10
     this.playerVelocity_.clampLength(0, this.MAX_SPEED);
@@ -151,12 +154,32 @@ export class PlayerController {
     if (this.keyStates_["KeyD"]) {
       this.playerVelocity_.add(this.getSideVector().multiplyScalar(speedDelta));
     }
-
-    if (this.playerOnFloor_) {
-      if (this.keyStates_["Space"]) {
-        this.playerVelocity_.y = this.JUMP_HEIGHT;
+    if (this.keyStates_["Space"]) {
+      const currentTime = performance.now(); // Get the current time in milliseconds
+      if (
+        !this.lastJumpTime ||
+        currentTime - this.lastJumpTime > this.JUMP_COOLDOWN
+      ) {
+        if (this.playerOnFloor_) {
+          this.playerVelocity_.y = this.JUMP_FORCE;
+          this.hasDoubleJump = true;
+          this.lastJumpTime = currentTime;
+        } else if (this.hasDoubleJump) {
+          this.playerVelocity_.y = Math.max(
+            this.playerVelocity_.y + this.JUMP_FORCE,
+            this.JUMP_FORCE
+          );
+          this.hasDoubleJump = false;
+          this.lastJumpTime = currentTime;
+        }
       }
     }
+
+    // if (this.playerOnFloor_) {
+    //   if (this.keyStates_["Space"]) {
+    //     this.playerVelocity_.y = this.JUMP_FORCE;
+    //   }
+    // }
   }
 
   teleportPlayerIfOob() {

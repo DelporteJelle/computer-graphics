@@ -16,14 +16,17 @@ import { MazeGeneratorVariant } from "./scripts/MazeGeneratorVariant";
  */
 
 const STEPS_PER_FRAME = 5;
+
 const MAZE_WIDTH = 15;
 const MAZE_DEPTH = 10;
+// const ROOM_SIZE = 0.6;
+// const ROOM_HEIGHT = 0.1;
 const ROOM_SIZE = 20;
 const ROOM_HEIGHT = 10;
 
-const GRAVITY = 20;
-const JUMP_HEIGHT = 14;
-const MAX_SPEED = 8;
+const GRAVITY = 25;
+const JUMP_FORCE = 12;
+const MAX_SPEED = 15;
 
 const CAMERA_ANGLE_CAP = Math.PI / 2.3;
 
@@ -52,6 +55,7 @@ export class Main {
   }
 
   initialize_() {
+    //Order is important, Keep this order of initialization
     this.initializeVariables_();
     this.initializeRenderer_();
     this.initializeScene_();
@@ -91,16 +95,6 @@ export class Main {
       0.1,
       1000
     );
-
-    this.playerController_ = new PlayerController(
-      this.target_,
-      this.worldOctree_,
-      this.camera_,
-      GRAVITY,
-      JUMP_HEIGHT,
-      MAX_SPEED,
-      CAMERA_ANGLE_CAP
-    );
     this.sceneBuilder_ = new SceneBuilder(
       true,
       this.worldOctree_,
@@ -115,31 +109,6 @@ export class Main {
     ); //Generates a maze with 10x10 tiles
   }
 
-  // Example using the GLTFLoader to load a GLTF file
-  // initializeScene_() {
-  //   this.scene_ = new THREE.Scene();
-  //   this.scene_.background = new THREE.Color(0x88ccee);
-  //   this.scene_.fog = new THREE.Fog(0x88ccee, 0, 50);
-
-  //   loader.load("collision-world.glb", (gltf) => {
-  //     console.log("GLTF loaded:", gltf); // Log the loaded GLTF
-
-  //     this.scene_.add(gltf.scene);
-
-  //     this.worldOctree_.fromGraphNode(gltf.scene);
-
-  //     gltf.scene.traverse((child) => {
-  //       if (child.isMesh) {
-  //         child.castShadow = true;
-  //         child.receiveShadow = true;
-
-  //         if (child.material.map) {
-  //           child.material.map.anisotropy = 4;
-  //         }
-  //       }
-  //     });
-  //   });
-  // }
   initializeScene_() {
     this.scene_.background = new THREE.Color(0x88ccee);
 
@@ -163,21 +132,22 @@ export class Main {
 
     this.sceneBuilder_.createMazeFloor(MAZE_WIDTH, MAZE_DEPTH);
 
-    // this.sceneBuilder_  .createMesh(
-    //   new THREE.BoxGeometry(5, 3, 5),
-    //   new THREE.MeshStandardMaterial({ color: 0xff0000 }),
-    //   new THREE.Vector3(0, 0, 0)
-    // );
-    // this.sceneBuilder_  .createMesh(
-    //   new THREE.BoxGeometry(4, 5, 4),
-    //   new THREE.MeshStandardMaterial({ color: 0x444444 }),
-    //   new THREE.Vector3(-2, 0, -7)
-    // );
-    // this.sceneBuilder_  .createMesh(
-    //   new THREE.BoxGeometry(4, 8, 4),
-    //   new THREE.MeshStandardMaterial({ color: 0x666666 }),
-    //   new THREE.Vector3(-15, 0, -18)
-    // );
+    this.sceneBuilder_.createMesh(
+      new THREE.BoxGeometry(5, 3, 5),
+      new THREE.MeshStandardMaterial({ color: 0xff0000 }),
+      new THREE.Vector3(0, 0, 0)
+    );
+    this.sceneBuilder_.createMesh(
+      new THREE.BoxGeometry(4, 5, 4),
+      new THREE.MeshStandardMaterial({ color: 0x444444 }),
+      new THREE.Vector3(-2, 0, -7)
+    );
+    this.sceneBuilder_.createMesh(
+      new THREE.BoxGeometry(4, 8, 4),
+      new THREE.MeshStandardMaterial({ color: 0x666666 }),
+      new THREE.Vector3(-15, 0, -18)
+    );
+    this.worldOctree_.fromGraphNode(this.scene_);
 
     // this.sceneBuilder_.load_glb_object(
     //   "glb/zombie.glb",
@@ -223,6 +193,20 @@ export class Main {
   }
 
   initializeCamera_() {
+    this.playerController_ = new PlayerController(
+      this.target_,
+      this.worldOctree_,
+      this.camera_,
+      GRAVITY,
+      JUMP_FORCE,
+      MAX_SPEED,
+      CAMERA_ANGLE_CAP,
+      new THREE.Vector2(
+        this.mazeGeneratorVariant_.start_tile.x * ROOM_SIZE,
+        this.mazeGeneratorVariant_.start_tile.y * ROOM_SIZE
+      )
+    );
+
     this.camera_.position.set(0, 5, 10);
     this.camera_.rotation.order = "YXZ";
 
@@ -250,26 +234,6 @@ export class Main {
     this.renderer_.setSize(window.innerWidth, window.innerHeight);
   }
 
-  // animate() {
-  //   //Times between frames
-  //   const deltaTime = Math.min(0.05, this.clock_.getDelta()) / STEPS_PER_FRAME;
-
-  //   // we look for collisions in substeps to mitigate the risk of
-  //   // an object traversing another too quickly for detection.
-
-  //   for (let i = 0; i < STEPS_PER_FRAME; i++) {
-  //     this.playerController_.controls(deltaTime);
-
-  //     this.playerController_.updatePlayer(deltaTime);
-
-  //     this.playerController_.teleportPlayerIfOob();
-  //   }
-
-  //   this.renderer_.render(this.uiScene_, this.uiCamera_);
-  //   this.renderer_.render(this.scene_, this.camera_);
-
-  //   this.stats_.update();
-  // }
   animate() {
     const FIXED_TIMESTEP = 1 / 120; // Fixed timestep of 60 FPS so physics are not tied to framerate
     const MAX_TIMESTEP = 0.1; // Maximum timestep to avoid spiral of death

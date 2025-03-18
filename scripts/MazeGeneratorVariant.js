@@ -1,5 +1,4 @@
 import * as THREE from "https://cdn.skypack.dev/three@0.136";
-import { max } from "three/tsl";
 
 export class MazeGeneratorVariant {
   constructor(width, depth) {
@@ -15,19 +14,31 @@ export class MazeGeneratorVariant {
         this.tiles[i][j] = tile;
       }
     }
-    this.stack.push(this.tiles[0][0]);
-    this.tiles[0][0].start = true;
-    this.tiles[0][0].distance_to_start = 0;
-    this.tiles[0][0].hall_id = 0;
-    this.tiles[0][0].visited = true;
+
+    // this.start_tile = this.tiles[Math.floor(width / 2)][Math.floor(depth / 2)];
+    this.start_tile = this.tiles[0][0];
+    this.stack.push(this.start_tile);
+    this.start_tile.start = true;
+    this.start_tile.distance_to_start = 0;
+    this.start_tile.hall_id = 0;
+    this.start_tile.visited = true;
   }
 
+  /**
+   * This algo crreates a maze by going depth first through the tree by visiting all unvisited neighbors of the tiles on the stack
+   * For example, we start with one tile and visit a random neighbor, we then push this one on the stack and repeat until there
+   * are no more unvisited tiles.
+   * This creates a maze with long hallways.
+   *
+   * By randomly going breadth first instead of depth first, we can create more but shorter hallways.
+   *
+   */
   generateMaze() {
     return new Promise((resolve) => {
       console.log("Generating maze...");
       let hall_id = 1;
       let max_distance = 0;
-      let max_distance_tile = this.tiles[0][0];
+      let max_distance_tile = this.start_tile;
       let max_hall_id = 0;
 
       while (this.stack.length > 0) {
@@ -52,15 +63,26 @@ export class MazeGeneratorVariant {
             max_distance_tile = next;
           }
 
-          if (unvisitedNeighbors.length > 1) {
-            this.stack.push(current);
+          //Random chance to go breadth first instead of depth first (to create more but shorter hallways)
+          if (Math.random() > 0.7) {
+            this.stack.push(next);
+            if (unvisitedNeighbors.length > 1) {
+              this.stack.push(current);
+            } else {
+              hall_id++;
+            }
           } else {
-            hall_id++;
+            if (unvisitedNeighbors.length > 1) {
+              this.stack.push(current);
+            } else {
+              hall_id++;
+            }
+            this.stack.push(next);
           }
+
           if (hall_id > max_hall_id) {
             max_hall_id = hall_id;
           }
-          this.stack.push(next);
         }
       }
 
@@ -68,22 +90,27 @@ export class MazeGeneratorVariant {
 
       //Remove walls between hallways to create loops, by using the hall_id property. The smaller the difference between hall_id, the closer the hallways are towards each other
       //We can use the amound of difference to control how big the "shortcuts" may be.
+      let chance = 0.2;
       for (let i = 0; i < this.width; i++) {
         for (let j = 0; j < this.depth; j++) {
           let tile = this.tiles[i][j];
-          if (tile.has_shortcut) continue;
+          if (tile.has_shortcut || tile.start || tile.end) continue;
           let neighbors = this.getNeighbors(tile);
           for (let neighbor of neighbors) {
             if (
               !neighbor.has_shortcut &&
+              !neighbor.start &&
+              !neighbor.end &&
               Math.abs(tile.hall_id - neighbor.hall_id) > 6 &&
               Math.abs(tile.hall_id - neighbor.hall_id) < max_hall_id / 5
             ) {
-              if (Math.random() > 0.5) {
+              if (Math.random() < chance) {
                 tile.has_shortcut = true;
                 neighbor.has_shortcut = true;
                 this.removeWall(tile, neighbor);
+                chance += 0.05;
               }
+              chance == 0.2;
             }
           }
         }
