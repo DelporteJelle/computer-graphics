@@ -1,5 +1,13 @@
-import { Capsule } from "three/addons/math/Capsule.js";
+/**
+ * THREE.hs
+ */
 import * as THREE from "https://cdn.skypack.dev/three@0.136";
+import { Capsule } from "three/addons/math/Capsule.js";
+
+/**
+ * Config
+ */
+import { JUMP_COOLDOWN } from "../config";
 
 export class PlayerController {
   constructor(
@@ -20,7 +28,7 @@ export class PlayerController {
     this.target_ = target || document;
     this.camera_ = camera;
     this.hasDoubleJump = true;
-    this.JUMP_COOLDOWN = 300;
+    this.JUMP_COOLDOWN = JUMP_COOLDOWN;
 
     this.playerCollider_ = new Capsule(
       new THREE.Vector3(SpawnPosition.x, 1, SpawnPosition.y), //Start point of collision box
@@ -152,8 +160,11 @@ export class PlayerController {
     }
 
     if (this.keyStates_["KeyD"]) {
-      this.playerVelocity_.add(this.getSideVector().multiplyScalar(speedDelta));
+      this.playerVelocity_.add(
+        this.getSideVector().multiplyScalar(speedDelta)
+      );
     }
+    
     if (this.keyStates_["Space"]) {
       const currentTime = performance.now(); // Get the current time in milliseconds
       if (

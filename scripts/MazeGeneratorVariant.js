@@ -46,14 +46,13 @@ export class MazeGeneratorVariant {
       while (this.stack.length > 0) {
         //Get first tile from the stack and check if it has any unvisited neighbors
         let current = this.stack.pop();
-        let unvisitedNeighbors = this.getUnvisitedNeighbors(current);
+        let unvisited_neighbours = this.getUnvisitedNeighbors(current);
 
         //If it has unvisited neighbors, pick one at random, remove the wall between them, and add it to the stack
-        if (unvisitedNeighbors.length > 0) {
-          let next =
-            unvisitedNeighbors[
-              Math.floor(Math.random() * unvisitedNeighbors.length)
-            ];
+        if (unvisited_neighbours.length > 0) {
+          let next = unvisited_neighbours[
+            Math.floor(Math.random() * unvisited_neighbours.length)
+          ];
 
           this.removeWall(current, next);
           next.hall_id = hall_id;
@@ -67,24 +66,17 @@ export class MazeGeneratorVariant {
 
           //Random chance to go breadth first instead of depth first (to create more but shorter hallways)
           if (Math.random() > 0.7) {
-            this.stack.push(next);
-            if (unvisitedNeighbors.length > 1) {
-              this.stack.push(current);
-            } else {
-              hall_id++;
-            }
+            this.stack.push(next); // Push next 1st
+            if (unvisited_neighbours.length > 1) this.stack.push(current); // Push current 2nd
+            else hall_id++;
           } else {
-            if (unvisitedNeighbors.length > 1) {
-              this.stack.push(current);
-            } else {
-              hall_id++;
-            }
-            this.stack.push(next);
+            if (unvisited_neighbours.length > 1) this.stack.push(current); // Push current 1st
+            else hall_id++;
+            this.stack.push(next); // Push next 2nd
           }
 
-          if (hall_id > max_hall_id) {
+          if (hall_id > max_hall_id)
             max_hall_id = hall_id;
-          }
         }
       }
 
@@ -123,6 +115,9 @@ export class MazeGeneratorVariant {
     });
   }
 
+  /**
+   * Prints maze in console
+   */
   printMaze() {
     for (let i = 0; i < this.tiles.length; i++) {
       let row = "";
@@ -139,74 +134,59 @@ export class MazeGeneratorVariant {
           row += t.hall_id.toString().padStart(3, " ");
         }
       }
-      console.log(row);
+      //console.log(row);
     }
   }
 
+  /**
+   * Gets all neighbours from a tile
+   * @param {Tile} tile 
+   * @returns list of tiles
+   */
   getNeighbors(tile) {
-    let locs = [
+    let neighbours = [
       { x: tile.x, y: tile.y - 1 },
       { x: tile.x, y: tile.y + 1 },
       { x: tile.x - 1, y: tile.y },
       { x: tile.x + 1, y: tile.y },
-    ];
-    let neigbors = [];
-    for (let loc of locs) {
-      if (
-        loc.x >= 0 &&
-        loc.x < this.width &&
-        loc.y >= 0 &&
-        loc.y < this.depth
-      ) {
-        let neighbor = this.tiles[loc.x][loc.y];
-        neigbors.push(neighbor);
-      }
-    }
-    return neigbors;
+    ].filter((loc) => // Filter out-of-bounds
+      loc.x >= 0 &&
+      loc.x < this.width &&
+      loc.y >= 0 &&
+      loc.y < this.depth
+    ).map((loc) => this.tiles[loc.x][loc.y]) // Map to tile
+    return neighbours;
   }
 
+  /**
+   * Removes walls between tiles
+   * @param {Tile} tile1 
+   * @param {Tile} tile2 
+   */
   removeWall(tile1, tile2) {
     let x = tile1.x - tile2.x;
-    if (x === 1) {
-      tile1.W = false;
-      tile2.E = false;
-    } else if (x === -1) {
-      tile1.E = false;
-      tile2.W = false;
-    }
+    if (x === 1)
+      tile1.W = tile2.E = false;
+    else if (x === -1) 
+      tile1.E = tile2.W = false;
 
     let y = tile1.y - tile2.y;
-    if (y === 1) {
-      tile1.N = false;
-      tile2.S = false;
-    } else if (y === -1) {
-      tile1.S = false;
-      tile2.N = false;
-    }
+    if (y === 1) 
+      tile1.N = tile2.S = false;
+    else if (y === -1) 
+      tile1.S = tile2.N = false;
   }
 
+  /**
+   * Gets all unvisited neighbours of a tile
+   * @param {Tile} tile 
+   * @returns list of tiles
+   */
   getUnvisitedNeighbors(tile) {
-    let locs = [
-      { x: tile.x, y: tile.y - 1 },
-      { x: tile.x, y: tile.y + 1 },
-      { x: tile.x - 1, y: tile.y },
-      { x: tile.x + 1, y: tile.y },
-    ];
-    let neigbors = [];
-    for (let loc of locs) {
-      if (
-        loc.x >= 0 &&
-        loc.x < this.width &&
-        loc.y >= 0 &&
-        loc.y < this.depth
-      ) {
-        let neighbor = this.tiles[loc.x][loc.y];
-        if (!neighbor.visited) {
-          neigbors.push(neighbor);
-        }
-      }
-    }
-    return neigbors;
+    let neighbours = this.getNeighbors(tile).filter( // Get all neighbours
+      (neighbour) => !neighbour.visited // Filter unvisited
+    )
+    return neighbours
   }
 }
 

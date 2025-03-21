@@ -1,9 +1,16 @@
+/**
+ * THREE.js
+ */
 import * as THREE from "https://cdn.skypack.dev/three@0.136";
 import Stats from "three/addons/libs/stats.module.js";
 import { Octree } from "three/addons/math/Octree.js";
 import { OctreeHelper } from "three/addons/helpers/OctreeHelper.js";
 import { Capsule } from "three/addons/math/Capsule.js";
 import { GUI } from "three/addons/libs/lil-gui.module.min.js";
+
+/**
+ * Scripts
+ */
 import { SceneBuilder } from "./scripts/SceneBuilder";
 import { PlayerController } from "./scripts/PlayerController";
 import { DirectionalLightHelper } from "three";
@@ -11,24 +18,19 @@ import { MazeGenerator } from "./scripts/MazeGenerator";
 import { MazeGeneratorVariant } from "./scripts/MazeGeneratorVariant";
 
 /**
+ * Config
+ */
+import { 
+  STEPS_PER_FRAME, MAZE_WIDTH, MAZE_DEPTH,
+  ROOM_SIZE, ROOM_HEIGHT, GRAVITY,
+  JUMP_FORCE, MAX_SPEED, CAMERA_ANGLE_CAP
+ } from "./config";
+
+/**
  * The Camera and collision code is based on the threejs example:
  * https://github.com/mrdoob/three.js/blob/master/examples/games_fps.html
  */
 
-const STEPS_PER_FRAME = 5;
-
-const MAZE_WIDTH = 15;
-const MAZE_DEPTH = 10;
-// const ROOM_SIZE = 0.6;
-// const ROOM_HEIGHT = 0.1;
-const ROOM_SIZE = 30;
-const ROOM_HEIGHT = 15;
-
-const GRAVITY = 25;
-const JUMP_FORCE = 12;
-const MAX_SPEED = 15;
-
-const CAMERA_ANGLE_CAP = Math.PI / 2.3;
 
 export class Main {
   constructor(target) {
@@ -95,30 +97,37 @@ export class Main {
       0.1,
       1000
     );
+
+    //contains helper functions to build the scene. Pass true to enable debugging features
     this.sceneBuilder_ = new SceneBuilder(
       true,
       this.worldOctree_,
       this.scene_,
       ROOM_SIZE,
       ROOM_HEIGHT
-    ); //contains helper functions to build the scene. Pass true to enable debugging features
-    this.mazeGenerator_ = new MazeGenerator(MAZE_WIDTH, MAZE_DEPTH); //Generates a maze with 10x10 tiles
+    ); 
+    //this.mazeGenerator_ = new MazeGenerator(MAZE_WIDTH, MAZE_DEPTH); 
+
+    //Generates a maze with 10x10 tile
     this.mazeGeneratorVariant_ = new MazeGeneratorVariant(
       MAZE_WIDTH,
       MAZE_DEPTH
-    ); //Generates a maze with 10x10 tiles
+    );
   }
 
   initializeScene_() {
     this.scene_.background = new THREE.Color(0x88ccee);
 
+    // Generate maze and create rooms
     this.mazeGeneratorVariant_.generateMaze().then(() => {
       for (let i = 0; i < MAZE_WIDTH; i++) {
         for (let j = 0; j < MAZE_DEPTH; j++) {
           let tile = this.mazeGeneratorVariant_.tiles[i][j];
           this.sceneBuilder_.create_room(
             new THREE.Vector3(i, 0, j),
-            tile.N,
+            tile.N, 
+            // @Jelle, ksnap waarom ge dit doet, maar zorgt de removeWall in generator classe er al niet voor 
+            // da er geen dubbele muren zijn? of ben ik verkeerd 
             i == MAZE_WIDTH - 1 ? true : false, //Only place East wall if it's the last tile in the row
             j == MAZE_DEPTH - 1 ? true : false, //Only place South wall if it's the last tile in the column
             tile.W,

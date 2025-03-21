@@ -1,4 +1,8 @@
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
+
+/**
+ * THREE.js
+ */
 import {
   Box3,
   BoxGeometry,
@@ -9,10 +13,21 @@ import {
 import * as THREE from "https://cdn.skypack.dev/three@0.136";
 import { color, roughness } from "three/tsl";
 
+/**
+ * Config
+ */
+import { WALL_DEPTH } from "../config";
+
+/**
+ * Textures
+ */
+import { TILES_CERAMIC_WHITE } from "../textures";
+
 export class SceneBuilder {
   constructor(debugging = false, octree, scene, ROOM_SIZE, ROOM_HEIGHT) {
     this.ROOM_HEIGHT = ROOM_HEIGHT;
     this.ROOM_SIZE = ROOM_SIZE;
+    this.WALL_DEPTH = WALL_DEPTH
     this.debugging_ = debugging;
     this.loader_ = new GLTFLoader().setPath("/resources/");
     this.worldOctree_ = octree;
@@ -90,10 +105,9 @@ export class SceneBuilder {
    * @param {THREE.Vector3} position //This is the position relative to the grid so (0, 0, 0) is center, (1, 0, 0) is right, etc.
    */
   create_room(position, N, E, S, W, start = false, end = false, tile) {
-    const wall_depth = 0.2;
     const textureLoader = new THREE.TextureLoader();
     const floorTexture = textureLoader.load(
-      "/resources/textures/TilesCeramicWhite/2K/TilesCeramicWhite_BaseColor.jpg",
+      TILES_CERAMIC_WHITE.baseColor,
       (texture) => {
         texture.wrapS = THREE.RepeatWrapping;
         texture.wrapT = THREE.RepeatWrapping;
@@ -101,18 +115,12 @@ export class SceneBuilder {
       }
     );
 
-    const normalMap = textureLoader.load(
-      "/resources/textures/TilesCeramicWhite/2K/TilesCeramicWhite_Normal.png"
-    );
-    const displacementMap = textureLoader.load(
-      "/resources/textures/TilesCeramicWhite/2K/TilesCeramicWhite_Displacement.png"
-    );
-    const roughnessMap = textureLoader.load(
-      "/resources/textures/TilesCeramicWhite/2K/TilesCeramicWhite_Roughness.jpg"
-    );
+    const normalMap = textureLoader.load(TILES_CERAMIC_WHITE.normalMap);
+    const displacementMap = textureLoader.load(TILES_CERAMIC_WHITE.displacementMap);
+    const roughnessMap = textureLoader.load(TILES_CERAMIC_WHITE.roughnessMap);
 
-    const offest = new THREE.Vector3(this.ROOM_SIZE, 0, this.ROOM_SIZE);
-    position.multiply(offest);
+    const offset = new THREE.Vector3(this.ROOM_SIZE, 0, this.ROOM_SIZE);
+    position.multiply(offset);
 
     // const ceilingGeometry = new THREE.PlaneGeometry(
     //   this.ROOM_SIZE,
@@ -142,7 +150,7 @@ export class SceneBuilder {
     const wallMaterial = new THREE.MeshStandardMaterial({ color: 0xaaaaaa });
     if (N) {
       this.createMesh(
-        new THREE.BoxGeometry(this.ROOM_SIZE, this.ROOM_HEIGHT, wall_depth),
+        new THREE.BoxGeometry(this.ROOM_SIZE, this.ROOM_HEIGHT, this.WALL_DEPTH),
         wallMaterial,
         new THREE.Vector3(
           position.x,
@@ -153,7 +161,7 @@ export class SceneBuilder {
     }
     if (S) {
       this.createMesh(
-        new THREE.BoxGeometry(this.ROOM_SIZE, this.ROOM_HEIGHT, wall_depth),
+        new THREE.BoxGeometry(this.ROOM_SIZE, this.ROOM_HEIGHT, this.WALL_DEPTH),
         wallMaterial,
         new THREE.Vector3(
           position.x,
@@ -164,7 +172,7 @@ export class SceneBuilder {
     }
     if (W) {
       this.createMesh(
-        new THREE.BoxGeometry(wall_depth, this.ROOM_HEIGHT, this.ROOM_SIZE),
+        new THREE.BoxGeometry(this.WALL_DEPTH, this.ROOM_HEIGHT, this.ROOM_SIZE),
         wallMaterial,
         new THREE.Vector3(
           position.x - this.ROOM_SIZE / 2,
@@ -175,7 +183,7 @@ export class SceneBuilder {
     }
     if (E) {
       this.createMesh(
-        new THREE.BoxGeometry(wall_depth, this.ROOM_HEIGHT, this.ROOM_SIZE),
+        new THREE.BoxGeometry(this.WALL_DEPTH, this.ROOM_HEIGHT, this.ROOM_SIZE),
         wallMaterial,
         new THREE.Vector3(
           position.x + this.ROOM_SIZE / 2,
@@ -238,7 +246,7 @@ export class SceneBuilder {
   createMazeFloor(width, depth) {
     const textureLoader = new THREE.TextureLoader();
     const floorTexture = textureLoader.load(
-      "/resources/textures/TilesCeramicWhite/2K/TilesCeramicWhite_BaseColor.jpg",
+      TILES_CERAMIC_WHITE.baseColor,
       (texture) => {
         texture.wrapS = THREE.RepeatWrapping;
         texture.wrapT = THREE.RepeatWrapping;
@@ -246,15 +254,9 @@ export class SceneBuilder {
       }
     );
 
-    const normalMap = textureLoader.load(
-      "/resources/textures/TilesCeramicWhite/2K/TilesCeramicWhite_Normal.png"
-    );
-    const displacementMap = textureLoader.load(
-      "/resources/textures/TilesCeramicWhite/2K/TilesCeramicWhite_Displacement.png"
-    );
-    const roughnessMap = textureLoader.load(
-      "/resources/textures/TilesCeramicWhite/2K/TilesCeramicWhite_Roughness.jpg"
-    );
+    const normalMap = textureLoader.load(TILES_CERAMIC_WHITE.normalMap);
+    const displacementMap = textureLoader.load(TILES_CERAMIC_WHITE.displacementMap);
+    const roughnessMap = textureLoader.load(TILES_CERAMIC_WHITE.roughnessMap);
 
     let total_width = width * this.ROOM_SIZE;
     let total_depth = depth * this.ROOM_SIZE;
