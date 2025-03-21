@@ -25,6 +25,8 @@ export class MazeGeneratorVariant {
   }
 
   /**
+   * Randomized depth-first search (https://en.wikipedia.org/wiki/Maze_generation_algorithm)
+   *
    * This algo crreates a maze by going depth first through the tree by visiting all unvisited neighbors of the tiles on the stack
    * For example, we start with one tile and visit a random neighbor, we then push this one on the stack and repeat until there
    * are no more unvisited tiles.

@@ -21,8 +21,8 @@ const MAZE_WIDTH = 15;
 const MAZE_DEPTH = 10;
 // const ROOM_SIZE = 0.6;
 // const ROOM_HEIGHT = 0.1;
-const ROOM_SIZE = 20;
-const ROOM_HEIGHT = 10;
+const ROOM_SIZE = 30;
+const ROOM_HEIGHT = 15;
 
 const GRAVITY = 25;
 const JUMP_FORCE = 12;

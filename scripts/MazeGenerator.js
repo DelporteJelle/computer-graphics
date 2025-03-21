@@ -32,6 +32,10 @@ export class MazeGenerator {
     }
   }
 
+  /**
+   * Iterative randomized Kruskal's algorithm
+   * @returns
+   */
   generateMaze() {
     return new Promise((resolve) => {
       console.log("Generating maze...");
