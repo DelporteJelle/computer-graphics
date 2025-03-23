@@ -1,5 +1,3 @@
-import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
-
 /**
  * THREE.js
  */
@@ -11,17 +9,27 @@ import {
   SphereGeometry,
 } from "three";
 import * as THREE from "https://cdn.skypack.dev/three@0.136";
+import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import { color, roughness } from "three/tsl";
 
 /**
  * Config
  */
-import { WALL_DEPTH } from "../config";
+import { WALL_DEPTH,
+  STEPS_PER_FRAME, MAZE_WIDTH, MAZE_DEPTH,
+  ROOM_SIZE, ROOM_HEIGHT, GRAVITY,
+  JUMP_FORCE, MAX_SPEED, CAMERA_ANGLE_CAP
+ } from "../config";
 
 /**
  * Textures
  */
 import { TILES_CERAMIC_WHITE } from "../textures";
+
+/**
+ * Components
+ */
+import { createRoom } from "./Components/Room";
 
 export class SceneBuilder {
   constructor(debugging = false, octree, scene, ROOM_SIZE, ROOM_HEIGHT) {
@@ -99,12 +107,47 @@ export class SceneBuilder {
     });
   }
 
+  buildMaze(tiles) {
+    for (let i = 0; i < MAZE_WIDTH; i++) {
+      for (let j = 0; j < MAZE_DEPTH; j++) {
+        let tile = tiles[i][j];
+        // this.create_room(
+        //   new THREE.Vector3(i, 0, j),
+        //   tile.N, 
+        //   // @Jelle, ksnap waarom ge dit doet, maar zorgt de removeWall in generator classe er al niet voor 
+        //   // da er geen dubbele muren zijn? of ben ik verkeerd 
+        //   i == MAZE_WIDTH - 1 ? true : false, //Only place East wall if it's the last tile in the row
+        //   j == MAZE_DEPTH - 1 ? true : false, //Only place South wall if it's the last tile in the column
+        //   tile.W,
+        //   tile.start,
+        //   tile.end,
+        //   tile
+        // );
+        createRoom(
+          this.scene_,
+          this.worldOctree_,
+          new THREE.Vector3(i, 0, j),
+          { 
+            N: tile.N, 
+            E: i == MAZE_WIDTH - 1 ? true : false, //Only place East wall if it's the last tile in the row
+            S: j == MAZE_DEPTH - 1 ? true : false, //Only place South wall if it's the last tile in the column
+            W: tile.W,
+            start: tile.start,
+            end: tile.end,
+            lighting: i%5 == 0
+          }
+        );
+      }
+    }
+  }
+
   /**
    * Creates a basic room
    *
    * @param {THREE.Vector3} position //This is the position relative to the grid so (0, 0, 0) is center, (1, 0, 0) is right, etc.
    */
   create_room(position, N, E, S, W, start = false, end = false, tile) {
+    // Floor
     const textureLoader = new THREE.TextureLoader();
     const floorTexture = textureLoader.load(
       TILES_CERAMIC_WHITE.baseColor,
@@ -147,6 +190,8 @@ export class SceneBuilder {
     //   roughnessMap: roughnessMap,
     //   roughness: 1,
     // });
+
+    // Walls
     const wallMaterial = new THREE.MeshStandardMaterial({ color: 0xaaaaaa });
     if (N) {
       this.createMesh(

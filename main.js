@@ -120,23 +120,24 @@ export class Main {
 
     // Generate maze and create rooms
     this.mazeGeneratorVariant_.generateMaze().then(() => {
-      for (let i = 0; i < MAZE_WIDTH; i++) {
-        for (let j = 0; j < MAZE_DEPTH; j++) {
-          let tile = this.mazeGeneratorVariant_.tiles[i][j];
-          this.sceneBuilder_.create_room(
-            new THREE.Vector3(i, 0, j),
-            tile.N, 
-            // @Jelle, ksnap waarom ge dit doet, maar zorgt de removeWall in generator classe er al niet voor 
-            // da er geen dubbele muren zijn? of ben ik verkeerd 
-            i == MAZE_WIDTH - 1 ? true : false, //Only place East wall if it's the last tile in the row
-            j == MAZE_DEPTH - 1 ? true : false, //Only place South wall if it's the last tile in the column
-            tile.W,
-            tile.start,
-            tile.end,
-            tile
-          );
-        }
-      }
+      // for (let i = 0; i < MAZE_WIDTH; i++) {
+      //   for (let j = 0; j < MAZE_DEPTH; j++) {
+      //     let tile = this.mazeGeneratorVariant_.tiles[i][j];
+      //     this.sceneBuilder_.create_room(
+      //       new THREE.Vector3(i, 0, j),
+      //       tile.N, 
+      //       // @Jelle, ksnap waarom ge dit doet, maar zorgt de removeWall in generator classe er al niet voor 
+      //       // da er geen dubbele muren zijn? of ben ik verkeerd 
+      //       i == MAZE_WIDTH - 1 ? true : false, //Only place East wall if it's the last tile in the row
+      //       j == MAZE_DEPTH - 1 ? true : false, //Only place South wall if it's the last tile in the column
+      //       tile.W,
+      //       tile.start,
+      //       tile.end,
+      //       tile
+      //     );
+      //   }
+      // }
+      this.sceneBuilder_.buildMaze(this.mazeGeneratorVariant_.tiles);
     });
 
     this.sceneBuilder_.createMazeFloor(MAZE_WIDTH, MAZE_DEPTH);
