@@ -4,6 +4,7 @@ import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
  * THREE.js
  */
 import {
+  BackSide,
   Box3,
   BoxGeometry,
   Mesh,
@@ -11,7 +12,6 @@ import {
   SphereGeometry,
 } from "three";
 import * as THREE from "https://cdn.skypack.dev/three@0.136";
-import { color, roughness } from "three/tsl";
 
 /**
  * Config
@@ -21,13 +21,13 @@ import { WALL_DEPTH } from "../config";
 /**
  * Textures
  */
-import { TILES_CERAMIC_WHITE } from "../textures";
+import { ICE_TEXTURE, TILES_CERAMIC_WHITE } from "../textures";
 
 export class SceneBuilder {
   constructor(debugging = false, octree, scene, ROOM_SIZE, ROOM_HEIGHT) {
     this.ROOM_HEIGHT = ROOM_HEIGHT;
     this.ROOM_SIZE = ROOM_SIZE;
-    this.WALL_DEPTH = WALL_DEPTH
+    this.WALL_DEPTH = WALL_DEPTH;
     this.debugging_ = debugging;
     this.loader_ = new GLTFLoader().setPath("/resources/");
     this.worldOctree_ = octree;
@@ -116,41 +116,22 @@ export class SceneBuilder {
     );
 
     const normalMap = textureLoader.load(TILES_CERAMIC_WHITE.normalMap);
-    const displacementMap = textureLoader.load(TILES_CERAMIC_WHITE.displacementMap);
+    const displacementMap = textureLoader.load(
+      TILES_CERAMIC_WHITE.displacementMap
+    );
     const roughnessMap = textureLoader.load(TILES_CERAMIC_WHITE.roughnessMap);
 
     const offset = new THREE.Vector3(this.ROOM_SIZE, 0, this.ROOM_SIZE);
     position.multiply(offset);
 
-    // const ceilingGeometry = new THREE.PlaneGeometry(
-    //   this.ROOM_SIZE,
-    //   this.ROOM_SIZE
-    // );
-    // const ceilingMaterial = new THREE.MeshStandardMaterial({
-    //   color: 0x222222,
-    //   side: THREE.BackSide,
-    // });
-    // const ceiling = new THREE.Mesh(ceilingGeometry, ceilingMaterial);
-    // ceiling.rotation.x = -Math.PI / 2;
-    // ceiling.receiveShadow = true;
-    // ceiling.position.set(position.x, position.y + this.ROOM_HEIGHT, position.z);
-    // this.scene_.add(ceiling);
-    // this.worldOctree_.fromGraphNode(ceiling);
-
-    // const wallMaterial = new THREE.MeshStandardMaterial({
-    //   color: 0xffffff,
-    //   map: floorTexture,
-    //   normalMap: normalMap,
-    //   normalScale: new THREE.Vector2(1, -1),
-    //   displacementMap: displacementMap,
-    //   displacementScale: 0,
-    //   roughnessMap: roughnessMap,
-    //   roughness: 1,
-    // });
     const wallMaterial = new THREE.MeshStandardMaterial({ color: 0xaaaaaa });
     if (N) {
       this.createMesh(
-        new THREE.BoxGeometry(this.ROOM_SIZE, this.ROOM_HEIGHT, this.WALL_DEPTH),
+        new THREE.BoxGeometry(
+          this.ROOM_SIZE,
+          this.ROOM_HEIGHT,
+          this.WALL_DEPTH
+        ),
         wallMaterial,
         new THREE.Vector3(
           position.x,
@@ -161,7 +142,11 @@ export class SceneBuilder {
     }
     if (S) {
       this.createMesh(
-        new THREE.BoxGeometry(this.ROOM_SIZE, this.ROOM_HEIGHT, this.WALL_DEPTH),
+        new THREE.BoxGeometry(
+          this.ROOM_SIZE,
+          this.ROOM_HEIGHT,
+          this.WALL_DEPTH
+        ),
         wallMaterial,
         new THREE.Vector3(
           position.x,
@@ -172,7 +157,11 @@ export class SceneBuilder {
     }
     if (W) {
       this.createMesh(
-        new THREE.BoxGeometry(this.WALL_DEPTH, this.ROOM_HEIGHT, this.ROOM_SIZE),
+        new THREE.BoxGeometry(
+          this.WALL_DEPTH,
+          this.ROOM_HEIGHT,
+          this.ROOM_SIZE
+        ),
         wallMaterial,
         new THREE.Vector3(
           position.x - this.ROOM_SIZE / 2,
@@ -183,7 +172,11 @@ export class SceneBuilder {
     }
     if (E) {
       this.createMesh(
-        new THREE.BoxGeometry(this.WALL_DEPTH, this.ROOM_HEIGHT, this.ROOM_SIZE),
+        new THREE.BoxGeometry(
+          this.WALL_DEPTH,
+          this.ROOM_HEIGHT,
+          this.ROOM_SIZE
+        ),
         wallMaterial,
         new THREE.Vector3(
           position.x + this.ROOM_SIZE / 2,
@@ -243,9 +236,10 @@ export class SceneBuilder {
     this.worldOctree_.fromGraphNode(mesh);
   }
 
-  createMazeFloor(width, depth) {
+  createPlane(width, depth, height) {
     const textureLoader = new THREE.TextureLoader();
-    const floorTexture = textureLoader.load(
+
+    const planeTexture = textureLoader.load(
       TILES_CERAMIC_WHITE.baseColor,
       (texture) => {
         texture.wrapS = THREE.RepeatWrapping;
@@ -253,23 +247,24 @@ export class SceneBuilder {
         texture.repeat.set(5, 5);
       }
     );
-
     const normalMap = textureLoader.load(TILES_CERAMIC_WHITE.normalMap);
-    const displacementMap = textureLoader.load(TILES_CERAMIC_WHITE.displacementMap);
+    const displacementMap = textureLoader.load(
+      TILES_CERAMIC_WHITE.displacementMap
+    );
     const roughnessMap = textureLoader.load(TILES_CERAMIC_WHITE.roughnessMap);
 
     let total_width = width * this.ROOM_SIZE;
     let total_depth = depth * this.ROOM_SIZE;
     let position = new THREE.Vector3(
       total_width / 2 - this.ROOM_SIZE / 2,
-      0,
+      height,
       total_depth / 2 - this.ROOM_SIZE / 2
     );
 
-    const floorGeometry = new THREE.PlaneGeometry(total_width, total_depth);
-    const floorMaterial = new THREE.MeshStandardMaterial({
+    const planeGeometry = new THREE.PlaneGeometry(total_width, total_depth);
+    const planeMaterial = new THREE.MeshStandardMaterial({
       color: 0x555555,
-      map: floorTexture,
+      map: planeTexture,
       normalMap: normalMap,
       normalScale: new THREE.Vector2(1, -1),
       displacementMap: displacementMap,
@@ -277,12 +272,12 @@ export class SceneBuilder {
       roughnessMap: roughnessMap,
       roughness: 1,
     });
-    const floor = new THREE.Mesh(floorGeometry, floorMaterial);
-    floor.rotation.x = -Math.PI / 2;
-    floor.receiveShadow = true;
-    floor.position.set(position.x, position.y, position.z);
-    this.scene_.add(floor);
+    const plane = new THREE.Mesh(planeGeometry, planeMaterial);
+    plane.rotation.x = -Math.PI / 2;
+    plane.receiveShadow = true;
+    plane.position.set(position.x, position.y, position.z);
+    this.scene_.add(plane);
 
-    this.worldOctree_.fromGraphNode(floor);
+    this.worldOctree_.fromGraphNode(plane);
   }
 }

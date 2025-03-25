@@ -16,21 +16,27 @@ import { PlayerController } from "./scripts/PlayerController";
 import { DirectionalLightHelper } from "three";
 import { MazeGenerator } from "./scripts/MazeGenerator";
 import { MazeGeneratorVariant } from "./scripts/MazeGeneratorVariant";
+import { ICE_TEXTURE, TILES_CERAMIC_WHITE } from "./textures";
 
 /**
  * Config
  */
-import { 
-  STEPS_PER_FRAME, MAZE_WIDTH, MAZE_DEPTH,
-  ROOM_SIZE, ROOM_HEIGHT, GRAVITY,
-  JUMP_FORCE, MAX_SPEED, CAMERA_ANGLE_CAP
- } from "./config";
+import {
+  STEPS_PER_FRAME,
+  MAZE_WIDTH,
+  MAZE_DEPTH,
+  ROOM_SIZE,
+  ROOM_HEIGHT,
+  GRAVITY,
+  JUMP_FORCE,
+  MAX_SPEED,
+  CAMERA_ANGLE_CAP,
+} from "./config";
 
 /**
  * The Camera and collision code is based on the threejs example:
  * https://github.com/mrdoob/three.js/blob/master/examples/games_fps.html
  */
-
 
 export class Main {
   constructor(target) {
@@ -105,8 +111,7 @@ export class Main {
       this.scene_,
       ROOM_SIZE,
       ROOM_HEIGHT
-    ); 
-    //this.mazeGenerator_ = new MazeGenerator(MAZE_WIDTH, MAZE_DEPTH); 
+    );
 
     //Generates a maze with 10x10 tile
     this.mazeGeneratorVariant_ = new MazeGeneratorVariant(
@@ -125,9 +130,7 @@ export class Main {
           let tile = this.mazeGeneratorVariant_.tiles[i][j];
           this.sceneBuilder_.create_room(
             new THREE.Vector3(i, 0, j),
-            tile.N, 
-            // @Jelle, ksnap waarom ge dit doet, maar zorgt de removeWall in generator classe er al niet voor 
-            // da er geen dubbele muren zijn? of ben ik verkeerd 
+            tile.N,
             i == MAZE_WIDTH - 1 ? true : false, //Only place East wall if it's the last tile in the row
             j == MAZE_DEPTH - 1 ? true : false, //Only place South wall if it's the last tile in the column
             tile.W,
@@ -139,11 +142,37 @@ export class Main {
       }
     });
 
-    this.sceneBuilder_.createMazeFloor(MAZE_WIDTH, MAZE_DEPTH);
+    this.sceneBuilder_.createPlane(MAZE_WIDTH, MAZE_DEPTH, 0);
+
+    /**
+     * Testing code
+     */
+    const textureLoader = new THREE.TextureLoader();
+    const floorTexture = textureLoader.load(
+      ICE_TEXTURE.baseColor,
+      (texture) => {
+        texture.wrapS = THREE.RepeatWrapping;
+        texture.wrapT = THREE.RepeatWrapping;
+        texture.repeat.set(5, 5);
+      }
+    );
+    const normalMap = textureLoader.load(ICE_TEXTURE.normalMap);
+    const displacementMap = textureLoader.load(ICE_TEXTURE.displacementMap);
+    const roughnessMap = textureLoader.load(ICE_TEXTURE.roughnessMap);
+    const floorMaterial = new THREE.MeshStandardMaterial({
+      color: 0x555555,
+      map: floorTexture,
+      normalMap: normalMap,
+      normalScale: new THREE.Vector2(1, -1),
+      displacementMap: displacementMap,
+      displacementScale: 0,
+      roughnessMap: roughnessMap,
+      roughness: 1,
+    });
 
     this.sceneBuilder_.createMesh(
       new THREE.BoxGeometry(5, 3, 5),
-      new THREE.MeshStandardMaterial({ color: 0xff0000 }),
+      floorMaterial,
       new THREE.Vector3(0, 0, 0)
     );
     this.sceneBuilder_.createMesh(
@@ -174,6 +203,9 @@ export class Main {
     const helper = new OctreeHelper(this.worldOctree_);
     helper.visible = false;
     this.scene_.add(helper);
+    /**
+     * End Testing code
+     */
 
     // Add a GUI control to toggle the visibility of the OctreeHelper
     const gui = new GUI({ width: 200 });
