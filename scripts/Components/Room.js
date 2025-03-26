@@ -54,17 +54,26 @@ export function createRoom(
     );
 
     if (lighting) {
-      // const rectLight = new THREE.RectAreaLight( 
-      //   0xffffff,               // Color
-      //   1.0,                    // Intensity
-      //   ROOM_SIZE, ROOM_SIZE    // Width, Height
-      // );
-      // rectLight.position.set( position.x, ROOM_HEIGHT, position.z );
-      // rectLight.lookAt( position.x, position.y, position.z );
-      // scene.add(rectLight)
+      const pointLight = new THREE.PointLight(
+        0xffa500,       // color
+        1.5,            // intensity
+        ROOM_SIZE * 2   // distance
+      );
 
-      // const helper = new RectAreaLightHelper( rectLight );
-      // rectLight.add( helper ); 
+      // Settings
+      pointLight.position.set(position.x, ROOM_HEIGHT, position.z );
+      pointLight.shadow.camera.near = 0.1;
+      pointLight.shadow.camera.far = 100;
+      pointLight.shadow.mapSize.width = 1024;
+      pointLight.shadow.mapSize.height = 1024;
+      pointLight.castShadow = true;
+      pointLight.shadow.radius = 2; //Blur the shadow to make it softer
+      pointLight.shadow.bias = -0.006; //Small bias can help reduce shadow artifacts
+
+      scene.add(pointLight);
+
+      const pointLightHelper = new THREE.PointLightHelper(pointLight, 1);
+      scene.add(pointLightHelper);
     }
   
     // Debugging

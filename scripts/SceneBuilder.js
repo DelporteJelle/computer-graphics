@@ -30,6 +30,7 @@ import { TILES_CERAMIC_WHITE } from "../textures";
  * Components
  */
 import { createRoom } from "./Components/Room";
+import { createMazeFloor } from "./Components/Floor";
 
 export class SceneBuilder {
   constructor(debugging = false, octree, scene, ROOM_SIZE, ROOM_HEIGHT) {
@@ -134,7 +135,7 @@ export class SceneBuilder {
             W: tile.W,
             start: tile.start,
             end: tile.end,
-            lighting: i%5 == 0
+            lighting: Math.random() < 0.1
           }
         );
       }
@@ -289,45 +290,10 @@ export class SceneBuilder {
   }
 
   createMazeFloor(width, depth) {
-    const textureLoader = new THREE.TextureLoader();
-    const floorTexture = textureLoader.load(
-      TILES_CERAMIC_WHITE.baseColor,
-      (texture) => {
-        texture.wrapS = THREE.RepeatWrapping;
-        texture.wrapT = THREE.RepeatWrapping;
-        texture.repeat.set(5, 5);
-      }
+    createMazeFloor(
+      this.scene_,
+      this.worldOctree_,
+      { width, depth }
     );
-
-    const normalMap = textureLoader.load(TILES_CERAMIC_WHITE.normalMap);
-    const displacementMap = textureLoader.load(TILES_CERAMIC_WHITE.displacementMap);
-    const roughnessMap = textureLoader.load(TILES_CERAMIC_WHITE.roughnessMap);
-
-    let total_width = width * this.ROOM_SIZE;
-    let total_depth = depth * this.ROOM_SIZE;
-    let position = new THREE.Vector3(
-      total_width / 2 - this.ROOM_SIZE / 2,
-      0,
-      total_depth / 2 - this.ROOM_SIZE / 2
-    );
-
-    const floorGeometry = new THREE.PlaneGeometry(total_width, total_depth);
-    const floorMaterial = new THREE.MeshStandardMaterial({
-      color: 0x555555,
-      map: floorTexture,
-      normalMap: normalMap,
-      normalScale: new THREE.Vector2(1, -1),
-      displacementMap: displacementMap,
-      displacementScale: 0,
-      roughnessMap: roughnessMap,
-      roughness: 1,
-    });
-    const floor = new THREE.Mesh(floorGeometry, floorMaterial);
-    floor.rotation.x = -Math.PI / 2;
-    floor.receiveShadow = true;
-    floor.position.set(position.x, position.y, position.z);
-    this.scene_.add(floor);
-
-    this.worldOctree_.fromGraphNode(floor);
   }
 }

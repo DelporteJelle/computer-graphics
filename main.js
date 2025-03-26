@@ -20,7 +20,7 @@ import { MazeGeneratorVariant } from "./scripts/MazeGeneratorVariant";
 /**
  * Config
  */
-import { 
+import {
   STEPS_PER_FRAME, MAZE_WIDTH, MAZE_DEPTH,
   ROOM_SIZE, ROOM_HEIGHT, GRAVITY,
   JUMP_FORCE, MAX_SPEED, CAMERA_ANGLE_CAP
@@ -36,12 +36,14 @@ export class Main {
   constructor(target) {
     this.target_ = target || document;
 
+    // World
     this.stats_ = null;
     this.clock_ = null;
     this.worldOctree_ = null;
     this.scene_ = null;
     this.camera_ = null;
 
+    // Player
     this.playerCollider_ = null;
     this.playerVelocity_ = null;
     this.playerDirection_ = null;
@@ -49,6 +51,7 @@ export class Main {
     this.mouseTime_ = null;
     this.keyStates_ = null;
 
+    // Maze
     this.sceneBuilder_ = null;
     this.mazeGenerator_ = null;
     this.mazeGeneratorVariant_ = null;
@@ -105,8 +108,8 @@ export class Main {
       this.scene_,
       ROOM_SIZE,
       ROOM_HEIGHT
-    ); 
-    //this.mazeGenerator_ = new MazeGenerator(MAZE_WIDTH, MAZE_DEPTH); 
+    );
+    //this.mazeGenerator_ = new MazeGenerator(MAZE_WIDTH, MAZE_DEPTH);
 
     //Generates a maze with 10x10 tile
     this.mazeGeneratorVariant_ = new MazeGeneratorVariant(
@@ -120,23 +123,6 @@ export class Main {
 
     // Generate maze and create rooms
     this.mazeGeneratorVariant_.generateMaze().then(() => {
-      // for (let i = 0; i < MAZE_WIDTH; i++) {
-      //   for (let j = 0; j < MAZE_DEPTH; j++) {
-      //     let tile = this.mazeGeneratorVariant_.tiles[i][j];
-      //     this.sceneBuilder_.create_room(
-      //       new THREE.Vector3(i, 0, j),
-      //       tile.N, 
-      //       // @Jelle, ksnap waarom ge dit doet, maar zorgt de removeWall in generator classe er al niet voor 
-      //       // da er geen dubbele muren zijn? of ben ik verkeerd 
-      //       i == MAZE_WIDTH - 1 ? true : false, //Only place East wall if it's the last tile in the row
-      //       j == MAZE_DEPTH - 1 ? true : false, //Only place South wall if it's the last tile in the column
-      //       tile.W,
-      //       tile.start,
-      //       tile.end,
-      //       tile
-      //     );
-      //   }
-      // }
       this.sceneBuilder_.buildMaze(this.mazeGeneratorVariant_.tiles);
     });
 
@@ -184,22 +170,18 @@ export class Main {
   }
 
   initializeLights_() {
-    const ambientLight = new THREE.AmbientLight(0xfffffff, 0.5);
+    // const fog = new THREE.Fog(0x000000, 2 * ROOM_SIZE, 5 * ROOM_SIZE);
+    // this.scene_.add(fog);
+    
+    const ambientLight = new THREE.AmbientLight(0xfffffff, 0.2);
     this.scene_.add(ambientLight);
 
-    const pointLight = new THREE.PointLight(0xffffff, 1, 100);
-    pointLight.shadow.camera.near = 0.1;
-    pointLight.shadow.camera.far = 100;
-    pointLight.shadow.mapSize.width = 1024;
-    pointLight.shadow.mapSize.height = 1024;
-    pointLight.position.set(-5, 13, -1);
-    pointLight.castShadow = true;
-    pointLight.shadow.radius = 2; //Blur the shadow to make it softer
-    pointLight.shadow.bias = -0.006; //Small bias can help reduce shadow artifacts
+    // const pointLight = new THREE.PointLight(0xffffff, 1, 100);
+    // 
 
-    this.scene_.add(pointLight);
-    const pointLightHelper = new THREE.PointLightHelper(pointLight, 1);
-    this.scene_.add(pointLightHelper);
+    // this.scene_.add(pointLight);
+    // const pointLightHelper = new THREE.PointLightHelper(pointLight, 1);
+    // this.scene_.add(pointLightHelper);
   }
 
   initializeCamera_() {
