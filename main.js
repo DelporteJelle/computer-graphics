@@ -31,6 +31,7 @@ import {
   JUMP_FORCE,
   MAX_SPEED,
   CAMERA_ANGLE_CAP,
+  MINIMAP_SIZE,
 } from "./config";
 
 /**
@@ -144,6 +145,9 @@ export class Main {
 
     this.sceneBuilder_.createPlane(MAZE_WIDTH, MAZE_DEPTH, 0);
 
+    //Draw the maze in the minimap
+    this.minimapScene_ = new THREE.Scene();
+    this.mazeGeneratorVariant_.drawMaze(this.minimapScene_);
     /**
      * Testing code
      */
@@ -251,28 +255,42 @@ export class Main {
     this.camera_.position.set(0, 5, 10);
     this.camera_.rotation.order = "YXZ";
 
-    const aspect = 1920 / 1080;
     //Can be used to add UI elements (such as minimap, crosshair, etc.)
-    this.uiCamera_ = new THREE.PerspectiveCamera(
-      -1,
-      1,
-      1 * aspect,
-      -1 * aspect,
-      1,
-      1000
+    this.minimapCamera = new THREE.OrthographicCamera(
+      -MAZE_WIDTH / 2 - 1,
+      MAZE_WIDTH / 2 + 1,
+      MAZE_DEPTH / 2 + 1,
+      -MAZE_DEPTH / 2 - 1,
+      0.1,
+      100
     );
-    this.uiScene_ = new THREE.Scene();
+
+    // Position the camera above the maze, looking straight down
+    this.minimapCamera.position.set(MAZE_WIDTH / 2, 10, MAZE_DEPTH / 2);
+    this.minimapCamera.lookAt(MAZE_WIDTH / 2, 0, MAZE_DEPTH / 2);
   }
 
   onWindowResize_() {
     this.camera_.aspect = window.innerWidth / window.innerHeight;
     this.camera_.updateProjectionMatrix();
 
-    this.uiCamera_.left = -this.camera_.aspect;
-    this.uiCamera_.right = this.camera_.aspect;
-    this.uiCamera_.updateProjectionMatrix();
-
     this.renderer_.setSize(window.innerWidth, window.innerHeight);
+  }
+
+  updateMinimap_() {
+    if (!this.playerDot_) {
+      const geometry = new THREE.CircleGeometry(0.2, 16);
+      const material = new THREE.MeshBasicMaterial({ color: 0x0000ff });
+      this.playerDot_ = new THREE.Mesh(geometry, material);
+      this.playerDot_.rotation.x = -Math.PI / 2;
+      this.minimapScene_.add(this.playerDot_);
+    }
+
+    const playerPosition = this.camera_.position;
+    const normalizedX = playerPosition.x / ROOM_SIZE;
+    const normalizedZ = playerPosition.z / ROOM_SIZE;
+
+    this.playerDot_.position.set(normalizedX, 0.1, normalizedZ);
   }
 
   animate() {
@@ -287,12 +305,23 @@ export class Main {
     while (this.accumulator_ >= FIXED_TIMESTEP) {
       this.playerController_.controls(FIXED_TIMESTEP);
       this.playerController_.updatePlayer(FIXED_TIMESTEP);
+      this.updateMinimap_();
       this.playerController_.teleportPlayerIfOob();
       this.accumulator_ -= FIXED_TIMESTEP;
     }
 
-    this.renderer_.render(this.uiScene_, this.uiCamera_);
+    // Render the main scene
+    this.renderer_.setViewport(0, 0, window.innerWidth, window.innerHeight);
+    this.renderer_.setScissor(0, 0, window.innerWidth, window.innerHeight);
+    this.renderer_.setScissorTest(false);
     this.renderer_.render(this.scene_, this.camera_);
+
+    // Render the minimap
+    let mazeRatio = MAZE_WIDTH / MAZE_DEPTH;
+    this.renderer_.setViewport(0, 0, MINIMAP_SIZE * mazeRatio, MINIMAP_SIZE);
+    this.renderer_.setScissor(0, 0, MINIMAP_SIZE * mazeRatio, MINIMAP_SIZE);
+    this.renderer_.setScissorTest(true);
+    this.renderer_.render(this.minimapScene_, this.minimapCamera);
 
     this.stats_.update();
   }
