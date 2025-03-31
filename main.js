@@ -265,6 +265,15 @@ export class Main {
       // Set position to camera
       this.playerlight_.position.copy(this.camera_.position);
 
+      // Enable shadows
+      this.playerlight_.shadow.camera.near = 0.1;
+      this.playerlight_.shadow.camera.far = 100;
+      this.playerlight_.shadow.mapSize.width = 1024;
+      this.playerlight_.shadow.mapSize.height = 1024;
+      this.playerlight_.castShadow = true;
+      this.playerlight_.shadow.radius = 2; //Blur the shadow to make it softer
+      this.playerlight_.shadow.bias = -0.006; //Small bias can help reduce shadow artifacts
+      
       // Add to scene
       this.scene_.add(this.playerlight_);
 
