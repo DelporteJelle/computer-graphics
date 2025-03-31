@@ -278,8 +278,8 @@ export class Main {
       this.scene_.add(this.playerlight_);
 
       // debug
-      const playerlightHelper = new THREE.PointLightHelper(this.playerlight_, 1);
-      this.scene_.add(playerlightHelper);
+      // const playerlightHelper = new THREE.PointLightHelper(this.playerlight_, 1);
+      // this.scene_.add(playerlightHelper);
     }
 
   updateMinimap_() {

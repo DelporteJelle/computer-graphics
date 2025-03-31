@@ -12,8 +12,8 @@ export const MAZE_DEPTH = 10;
 export const MAZE_RATIO = MAZE_WIDTH / MAZE_DEPTH
 // export const ROOM_SIZE = 0.6;
 // export const ROOM_HEIGHT = 0.1;
-export const ROOM_SIZE = 10;
-export const ROOM_HEIGHT = 5;
+export const ROOM_SIZE = 15;
+export const ROOM_HEIGHT = 10;
 export const WALL_DEPTH = 0.2;
 
 /**
