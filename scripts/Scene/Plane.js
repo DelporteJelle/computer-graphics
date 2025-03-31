@@ -3,6 +3,12 @@ import * as THREE from "https://cdn.skypack.dev/three@0.136";
 import { ROOM_SIZE } from "../../config";
 import { TILES_CERAMIC_WHITE } from "../../textures";
 
+/**
+ * Creates a plane with given params
+ * @param {*} scene_ 
+ * @param {*} octree_ 
+ * @param { object } params 
+ */
 export function createPlane(
   scene_,
   octree_,
@@ -47,7 +53,10 @@ export function createPlane(
   plane.rotation.x = -Math.PI / 2;
   plane.receiveShadow = true;
   plane.position.set(position.x, position.y, position.z);
+
+  // Add to scene
   scene_.add(plane);
 
+  // Add to octree
   octree_.fromGraphNode(plane);
 }

@@ -54,29 +54,29 @@ export function createRoom(
       wallMaterial
     );
 
-    const lighting = false;
-    if (lighting) {
-      const pointLight = new THREE.PointLight(
-        0xffa500,       // color
-        1.5,            // intensity
-        ROOM_SIZE * 2   // distance
-      );
+    // const lighting = false;
+    // if (lighting) {
+    //   const pointLight = new THREE.PointLight(
+    //     0xffa500,       // color
+    //     1.5,            // intensity
+    //     ROOM_SIZE * 2   // distance
+    //   );
 
-      // Settings
-      pointLight.position.set(position.x, ROOM_HEIGHT, position.z );
-      pointLight.shadow.camera.near = 0.1;
-      pointLight.shadow.camera.far = 100;
-      pointLight.shadow.mapSize.width = 1024;
-      pointLight.shadow.mapSize.height = 1024;
-      pointLight.castShadow = true;
-      pointLight.shadow.radius = 2; //Blur the shadow to make it softer
-      pointLight.shadow.bias = -0.006; //Small bias can help reduce shadow artifacts
+    //   // Settings
+    //   pointLight.position.set(position.x, ROOM_HEIGHT, position.z );
+    //   pointLight.shadow.camera.near = 0.1;
+    //   pointLight.shadow.camera.far = 100;
+    //   pointLight.shadow.mapSize.width = 1024;
+    //   pointLight.shadow.mapSize.height = 1024;
+    //   pointLight.castShadow = true;
+    //   pointLight.shadow.radius = 2; //Blur the shadow to make it softer
+    //   pointLight.shadow.bias = -0.006; //Small bias can help reduce shadow artifacts
 
-      scene_.add(pointLight);
+    //   scene_.add(pointLight);
 
-      const pointLightHelper = new THREE.PointLightHelper(pointLight, 1);
-      scene_.add(pointLightHelper);
-    }
+    //   const pointLightHelper = new THREE.PointLightHelper(pointLight, 1);
+    //   scene_.add(pointLightHelper);
+    // }
   
     // Debugging
     if (start || end) {

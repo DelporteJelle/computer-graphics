@@ -140,6 +140,10 @@ export class MazeGeneratorVariant {
     }
   }
 
+  /**
+   * Draws maze on the minimap
+   * @param {*} scene_ 
+   */
   drawMaze(scene_) {
     const lineMaterial = new THREE.LineBasicMaterial({ color: 0xffffff });
 

@@ -12,8 +12,7 @@ import { GUI } from "three/addons/libs/lil-gui.module.min.js";
  * Scripts
  */
 import { SceneBuilder } from "./scripts/SceneBuilder";
-import { PlayerController } from "./scripts/PlayerController";
-import { DirectionalLightHelper } from "three";
+import { PlayerController } from "./scripts/Player/PlayerController";
 import { MazeGenerator } from "./scripts/MazeGenerator";
 import { MazeGeneratorVariant } from "./scripts/MazeGeneratorVariant";
 import { ICE_TEXTURE, TILES_CERAMIC_WHITE } from "./textures";
@@ -130,6 +129,9 @@ export class Main {
 
   /**
    * Initializes the scene
+   * - Builds floor
+   * - Builds maze room
+   * - Draws maze on minimap
    */
   initializeScene_() {
     this.scene_.background = new THREE.Color(0x88ccee);
@@ -144,6 +146,7 @@ export class Main {
     //Draw the maze in the minimap
     this.minimapScene_ = new THREE.Scene();
     this.mazeGeneratorVariant_.drawMaze(this.minimapScene_);
+
     /**
      * Testing code
      */
@@ -214,6 +217,9 @@ export class Main {
     });
   }
 
+  /**
+   * Initializes player camera, controls and minimap
+   */
   initializeCamera_() {
     this.playerController_ = new PlayerController(
       this.target_,
@@ -235,9 +241,9 @@ export class Main {
     //Can be used to add UI elements (such as minimap, crosshair, etc.)
     this.minimapCamera = new THREE.OrthographicCamera(
       -MAZE_WIDTH / 2 - 1,
-      MAZE_WIDTH / 2 + 1,
+      MAZE_WIDTH / 2 ,
       MAZE_DEPTH / 2 + 1,
-      -MAZE_DEPTH / 2 - 1,
+      -MAZE_DEPTH / 2,
       0.1,
       100
     );
@@ -248,8 +254,8 @@ export class Main {
   }
 
     /**
-   * Initalizes ambient light and pointlight following the player
-   */
+    * Initalizes ambient light and pointlight following the player
+    */
     initializeLights_() {
 
       // Low ambient lighting
@@ -282,6 +288,9 @@ export class Main {
       // this.scene_.add(playerlightHelper);
     }
 
+  /**
+   * Updates player position on minimap
+   */
   updateMinimap_() {
     if (!this.playerDot_) {
       const geometry = new THREE.CircleGeometry(0.2, 16);
@@ -298,6 +307,9 @@ export class Main {
     this.playerDot_.position.set(normalizedX, 0.1, normalizedZ);
   }
 
+  /**
+   * Updates pointlight position to follow player
+   */
   updatePlayerlight() {
     if (this.playerlight_ && this.camera_) {
       this.playerlight_.position.copy(

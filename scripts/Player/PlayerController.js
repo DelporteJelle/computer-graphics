@@ -7,7 +7,7 @@ import { Capsule } from "three/addons/math/Capsule.js";
 /**
  * Config
  */
-import { JUMP_COOLDOWN } from "../config";
+import { JUMP_COOLDOWN } from "../../config";
 
 export class PlayerController {
   constructor(
@@ -96,6 +96,7 @@ export class PlayerController {
       }
     }
   }
+  
   updatePlayer(deltaTime) {
     if (!this.playerOnFloor_) {
       this.playerVelocity_.y -= this.GRAVITY * deltaTime;

@@ -124,6 +124,10 @@ export class SceneBuilder {
     this.worldOctree_.fromGraphNode(mesh);
   }
 
+  /**
+   * Builds maze from grid of generated tiles
+   * @param {*} tiles 
+   */
   buildMaze(tiles) {
     for (let i = 0; i < MAZE_WIDTH; i++) {
       for (let j = 0; j < MAZE_DEPTH; j++) {
@@ -144,7 +148,6 @@ export class SceneBuilder {
       }
     }
   }
-
 
   createPlane(width, depth, height) {
     createPlane(

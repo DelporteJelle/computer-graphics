@@ -27,5 +27,5 @@ export const MAX_SPEED = 15;
  * Player Modifiers
  */
 export const JUMP_COOLDOWN = 300;
-
 export const MINIMAP_SIZE = 250;
+

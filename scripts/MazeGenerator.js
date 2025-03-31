@@ -1,5 +1,8 @@
 import * as THREE from "https://cdn.skypack.dev/three@0.136";
 
+/**
+ * DEPRECATED: we use MazeGeneratorVariant instead
+ */
 export class MazeGenerator {
   constructor(width, depth) {
     this.tiles_by_hall = {};
