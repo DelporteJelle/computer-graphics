@@ -70,6 +70,9 @@ export class MazeGenerator {
     });
   }
 
+  /**
+   * For debugging purposes
+   */
   printMaze() {
     for (let i = 0; i < this.tiles.length; i++) {
       let row = "";

@@ -50,9 +50,10 @@ export class MazeGeneratorVariant {
 
         //If it has unvisited neighbors, pick one at random, remove the wall between them, and add it to the stack
         if (unvisited_neighbours.length > 0) {
-          let next = unvisited_neighbours[
-            Math.floor(Math.random() * unvisited_neighbours.length)
-          ];
+          let next =
+            unvisited_neighbours[
+              Math.floor(Math.random() * unvisited_neighbours.length)
+            ];
 
           this.removeWall(current, next);
           next.hall_id = hall_id;
@@ -67,16 +68,17 @@ export class MazeGeneratorVariant {
           //Random chance to go breadth first instead of depth first (to create more but shorter hallways)
           if (Math.random() > 0.7) {
             this.stack.push(next); // Push next 1st
-            if (unvisited_neighbours.length > 1) this.stack.push(current); // Push current 2nd
+            if (unvisited_neighbours.length > 1)
+              this.stack.push(current); // Push current 2nd
             else hall_id++;
           } else {
-            if (unvisited_neighbours.length > 1) this.stack.push(current); // Push current 1st
+            if (unvisited_neighbours.length > 1)
+              this.stack.push(current); // Push current 1st
             else hall_id++;
             this.stack.push(next); // Push next 2nd
           }
 
-          if (hall_id > max_hall_id)
-            max_hall_id = hall_id;
+          if (hall_id > max_hall_id) max_hall_id = hall_id;
         }
       }
 
@@ -138,9 +140,68 @@ export class MazeGeneratorVariant {
     }
   }
 
+  drawMaze(scene_) {
+    const lineMaterial = new THREE.LineBasicMaterial({ color: 0xffffff });
+
+    const mazeGroup = new THREE.Group();
+
+    for (let i = 0; i < this.tiles.length; i++) {
+      for (let j = 0; j < this.tiles[i].length; j++) {
+        const tile = this.tiles[i][j];
+
+        if (tile.start) {
+          const geometry = new THREE.BoxGeometry(0.7, 0, 0.7);
+          const material = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
+          const startTileMesh = new THREE.Mesh(geometry, material);
+          startTileMesh.position.set(i, 0.05, j);
+          mazeGroup.add(startTileMesh);
+        }
+
+        if (tile.end) {
+          const geometry = new THREE.BoxGeometry(0.7, 0, 0.7);
+          const material = new THREE.MeshBasicMaterial({ color: 0xff0000 });
+          const startTileMesh = new THREE.Mesh(geometry, material);
+          startTileMesh.position.set(i, 0.05, j);
+          mazeGroup.add(startTileMesh);
+        }
+
+        if (tile.N) {
+          const geometry = new THREE.BufferGeometry().setFromPoints([
+            new THREE.Vector3(i - 0.5, 0, j - 0.5),
+            new THREE.Vector3(i + 0.5, 0, j - 0.5),
+          ]);
+          mazeGroup.add(new THREE.Line(geometry, lineMaterial));
+        }
+        if (tile.E) {
+          const geometry = new THREE.BufferGeometry().setFromPoints([
+            new THREE.Vector3(i + 0.5, 0, j - 0.5),
+            new THREE.Vector3(i + 0.5, 0, j + 0.5),
+          ]);
+          mazeGroup.add(new THREE.Line(geometry, lineMaterial));
+        }
+        if (tile.S) {
+          const geometry = new THREE.BufferGeometry().setFromPoints([
+            new THREE.Vector3(i - 0.5, 0, j + 0.5),
+            new THREE.Vector3(i + 0.5, 0, j + 0.5),
+          ]);
+          mazeGroup.add(new THREE.Line(geometry, lineMaterial));
+        }
+        if (tile.W) {
+          const geometry = new THREE.BufferGeometry().setFromPoints([
+            new THREE.Vector3(i - 0.5, 0, j - 0.5),
+            new THREE.Vector3(i - 0.5, 0, j + 0.5),
+          ]);
+          mazeGroup.add(new THREE.Line(geometry, lineMaterial));
+        }
+      }
+    }
+
+    scene_.add(mazeGroup);
+  }
+
   /**
    * Gets all neighbours from a tile
-   * @param {Tile} tile 
+   * @param {Tile} tile
    * @returns list of tiles
    */
   getNeighbors(tile) {
@@ -149,44 +210,43 @@ export class MazeGeneratorVariant {
       { x: tile.x, y: tile.y + 1 },
       { x: tile.x - 1, y: tile.y },
       { x: tile.x + 1, y: tile.y },
-    ].filter((loc) => // Filter out-of-bounds
-      loc.x >= 0 &&
-      loc.x < this.width &&
-      loc.y >= 0 &&
-      loc.y < this.depth
-    ).map((loc) => this.tiles[loc.x][loc.y]) // Map to tile
+    ]
+      .filter(
+        (
+          loc // Filter out-of-bounds
+        ) =>
+          loc.x >= 0 && loc.x < this.width && loc.y >= 0 && loc.y < this.depth
+      )
+      .map((loc) => this.tiles[loc.x][loc.y]); // Map to tile
     return neighbours;
   }
 
   /**
    * Removes walls between tiles
-   * @param {Tile} tile1 
-   * @param {Tile} tile2 
+   * @param {Tile} tile1
+   * @param {Tile} tile2
    */
   removeWall(tile1, tile2) {
     let x = tile1.x - tile2.x;
-    if (x === 1)
-      tile1.W = tile2.E = false;
-    else if (x === -1) 
-      tile1.E = tile2.W = false;
+    if (x === 1) tile1.W = tile2.E = false;
+    else if (x === -1) tile1.E = tile2.W = false;
 
     let y = tile1.y - tile2.y;
-    if (y === 1) 
-      tile1.N = tile2.S = false;
-    else if (y === -1) 
-      tile1.S = tile2.N = false;
+    if (y === 1) tile1.N = tile2.S = false;
+    else if (y === -1) tile1.S = tile2.N = false;
   }
 
   /**
    * Gets all unvisited neighbours of a tile
-   * @param {Tile} tile 
+   * @param {Tile} tile
    * @returns list of tiles
    */
   getUnvisitedNeighbors(tile) {
-    let neighbours = this.getNeighbors(tile).filter( // Get all neighbours
+    let neighbours = this.getNeighbors(tile).filter(
+      // Get all neighbours
       (neighbour) => !neighbour.visited // Filter unvisited
-    )
-    return neighbours
+    );
+    return neighbours;
   }
 }
 

@@ -2,6 +2,7 @@
  * THREE.js
  */
 import {
+  BackSide,
   Box3,
   BoxGeometry,
   Mesh,
@@ -24,19 +25,19 @@ import { WALL_DEPTH,
 /**
  * Textures
  */
-import { TILES_CERAMIC_WHITE } from "../textures";
+import { ICE_TEXTURE, TILES_CERAMIC_WHITE } from "../textures";
 
 /**
  * Components
  */
-import { createRoom } from "./Components/Room";
-import { createMazeFloor } from "./Components/Floor";
+import { createRoom } from "./Scene/Room";
+import { createPlane } from "./Scene/Plane";
 
 export class SceneBuilder {
   constructor(debugging = false, octree, scene, ROOM_SIZE, ROOM_HEIGHT) {
     this.ROOM_HEIGHT = ROOM_HEIGHT;
     this.ROOM_SIZE = ROOM_SIZE;
-    this.WALL_DEPTH = WALL_DEPTH
+    this.WALL_DEPTH = WALL_DEPTH;
     this.debugging_ = debugging;
     this.loader_ = new GLTFLoader().setPath("/resources/");
     this.worldOctree_ = octree;
@@ -108,22 +109,25 @@ export class SceneBuilder {
     });
   }
 
+  /**
+   * creates a mesh with given geometry, material and position
+   * @param {*} geometry 
+   * @param {*} material 
+   * @param {*} position 
+   */
+  createMesh(geometry, material, position) {
+    const mesh = new THREE.Mesh(geometry, material);
+    mesh.position.set(position.x, position.y, position.z);
+    mesh.castShadow = true;
+    mesh.receiveShadow = true;
+    this.scene_.add(mesh);
+    this.worldOctree_.fromGraphNode(mesh);
+  }
+
   buildMaze(tiles) {
     for (let i = 0; i < MAZE_WIDTH; i++) {
       for (let j = 0; j < MAZE_DEPTH; j++) {
         let tile = tiles[i][j];
-        // this.create_room(
-        //   new THREE.Vector3(i, 0, j),
-        //   tile.N, 
-        //   // @Jelle, ksnap waarom ge dit doet, maar zorgt de removeWall in generator classe er al niet voor 
-        //   // da er geen dubbele muren zijn? of ben ik verkeerd 
-        //   i == MAZE_WIDTH - 1 ? true : false, //Only place East wall if it's the last tile in the row
-        //   j == MAZE_DEPTH - 1 ? true : false, //Only place South wall if it's the last tile in the column
-        //   tile.W,
-        //   tile.start,
-        //   tile.end,
-        //   tile
-        // );
         createRoom(
           this.scene_,
           this.worldOctree_,
@@ -134,166 +138,23 @@ export class SceneBuilder {
             S: j == MAZE_DEPTH - 1 ? true : false, //Only place South wall if it's the last tile in the column
             W: tile.W,
             start: tile.start,
-            end: tile.end,
-            lighting: Math.random() < 0.1
+            end: tile.end
           }
         );
       }
     }
   }
 
-  /**
-   * Creates a basic room
-   *
-   * @param {THREE.Vector3} position //This is the position relative to the grid so (0, 0, 0) is center, (1, 0, 0) is right, etc.
-   */
-  create_room(position, N, E, S, W, start = false, end = false, tile) {
-    // Floor
-    const textureLoader = new THREE.TextureLoader();
-    const floorTexture = textureLoader.load(
-      TILES_CERAMIC_WHITE.baseColor,
-      (texture) => {
-        texture.wrapS = THREE.RepeatWrapping;
-        texture.wrapT = THREE.RepeatWrapping;
-        texture.repeat.set(5, 5);
-      }
-    );
 
-    const normalMap = textureLoader.load(TILES_CERAMIC_WHITE.normalMap);
-    const displacementMap = textureLoader.load(TILES_CERAMIC_WHITE.displacementMap);
-    const roughnessMap = textureLoader.load(TILES_CERAMIC_WHITE.roughnessMap);
-
-    const offset = new THREE.Vector3(this.ROOM_SIZE, 0, this.ROOM_SIZE);
-    position.multiply(offset);
-
-    // const ceilingGeometry = new THREE.PlaneGeometry(
-    //   this.ROOM_SIZE,
-    //   this.ROOM_SIZE
-    // );
-    // const ceilingMaterial = new THREE.MeshStandardMaterial({
-    //   color: 0x222222,
-    //   side: THREE.BackSide,
-    // });
-    // const ceiling = new THREE.Mesh(ceilingGeometry, ceilingMaterial);
-    // ceiling.rotation.x = -Math.PI / 2;
-    // ceiling.receiveShadow = true;
-    // ceiling.position.set(position.x, position.y + this.ROOM_HEIGHT, position.z);
-    // this.scene_.add(ceiling);
-    // this.worldOctree_.fromGraphNode(ceiling);
-
-    // const wallMaterial = new THREE.MeshStandardMaterial({
-    //   color: 0xffffff,
-    //   map: floorTexture,
-    //   normalMap: normalMap,
-    //   normalScale: new THREE.Vector2(1, -1),
-    //   displacementMap: displacementMap,
-    //   displacementScale: 0,
-    //   roughnessMap: roughnessMap,
-    //   roughness: 1,
-    // });
-
-    // Walls
-    const wallMaterial = new THREE.MeshStandardMaterial({ color: 0xaaaaaa });
-    if (N) {
-      this.createMesh(
-        new THREE.BoxGeometry(this.ROOM_SIZE, this.ROOM_HEIGHT, this.WALL_DEPTH),
-        wallMaterial,
-        new THREE.Vector3(
-          position.x,
-          this.ROOM_HEIGHT / 2,
-          position.z - this.ROOM_SIZE / 2
-        )
-      );
-    }
-    if (S) {
-      this.createMesh(
-        new THREE.BoxGeometry(this.ROOM_SIZE, this.ROOM_HEIGHT, this.WALL_DEPTH),
-        wallMaterial,
-        new THREE.Vector3(
-          position.x,
-          this.ROOM_HEIGHT / 2,
-          position.z + this.ROOM_SIZE / 2
-        )
-      );
-    }
-    if (W) {
-      this.createMesh(
-        new THREE.BoxGeometry(this.WALL_DEPTH, this.ROOM_HEIGHT, this.ROOM_SIZE),
-        wallMaterial,
-        new THREE.Vector3(
-          position.x - this.ROOM_SIZE / 2,
-          this.ROOM_HEIGHT / 2,
-          position.z
-        )
-      );
-    }
-    if (E) {
-      this.createMesh(
-        new THREE.BoxGeometry(this.WALL_DEPTH, this.ROOM_HEIGHT, this.ROOM_SIZE),
-        wallMaterial,
-        new THREE.Vector3(
-          position.x + this.ROOM_SIZE / 2,
-          this.ROOM_HEIGHT / 2,
-          position.z
-        )
-      );
-    }
-
-    //Meshes for debugging purposes
-    if (start) {
-      this.createMesh(
-        new THREE.BoxGeometry(this.ROOM_SIZE, 0.01, this.ROOM_SIZE),
-        new THREE.MeshStandardMaterial({
-          color: 0x00ff00,
-        }),
-        new THREE.Vector3(position.x, 0, position.z)
-      );
-    }
-    if (end) {
-      this.createMesh(
-        new THREE.BoxGeometry(this.ROOM_SIZE, 0.01, this.ROOM_SIZE),
-        new THREE.MeshStandardMaterial({
-          color: 0xff0000,
-        }),
-        new THREE.Vector3(position.x, 0, position.z)
-      );
-    }
-    // if (tile.has_shortcut) {
-    //   this.createMesh(
-    //     new THREE.BoxGeometry(this.ROOM_SIZE, 0.01, this.ROOM_SIZE),
-    //     new THREE.MeshStandardMaterial({
-    //       color: 0x0000ff,
-    //     }),
-    //     new THREE.Vector3(position.x, 0, position.z)
-    //   );
-    // }
-    // this.createMesh(
-    //   new THREE.SphereGeometry(0.1, 10, 10),
-    //   new THREE.MeshStandardMaterial({
-    //     color: new THREE.Color().lerpColors(
-    //       new THREE.Color(0x0000ff), // Blue for close distances
-    //       new THREE.Color(0xff0000), // Red for far distances
-    //       tile.hall_id / 15 // Normalize distance
-    //     ),
-    //   }),
-    //   new THREE.Vector3(position.x, 0, position.z)
-    // );
-  }
-
-  createMesh(geometry, material, position) {
-    const mesh = new THREE.Mesh(geometry, material);
-    mesh.position.set(position.x, position.y, position.z);
-    mesh.castShadow = true;
-    mesh.receiveShadow = true;
-    this.scene_.add(mesh);
-    this.worldOctree_.fromGraphNode(mesh);
-  }
-
-  createMazeFloor(width, depth) {
-    createMazeFloor(
+  createPlane(width, depth, height) {
+    createPlane(
       this.scene_,
       this.worldOctree_,
-      { width, depth }
-    );
+      {
+        width,
+        depth,
+        height
+      }
+    )
   }
 }
