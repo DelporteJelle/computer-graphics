@@ -2,6 +2,7 @@ import * as THREE from "https://cdn.skypack.dev/three@0.136";
 import { RectAreaLightHelper } from 'three/addons/helpers/RectAreaLightHelper.js';
 
 import { ROOM_SIZE, ROOM_HEIGHT, WALL_DEPTH } from "../../config";
+import { QUAKE } from "../../textures";
 
 /**
  * Creates a room
@@ -21,7 +22,25 @@ export function createRoom(
     const offset = new THREE.Vector3(ROOM_SIZE, 0, ROOM_SIZE);
     position.multiply(offset);
 
-    const wallMaterial = new THREE.MeshStandardMaterial({ color: 0xaaaaaa });
+    const textureLoader = new THREE.TextureLoader();
+  
+    const wallTexture = textureLoader.load(
+      QUAKE.wallTiles,
+      (texture) => {
+        texture.wrapS = THREE.RepeatWrapping;
+        texture.wrapT = THREE.RepeatWrapping;
+        texture.repeat.set(3, 3);
+      }
+    );
+    
+    const wallMaterial = new THREE.MeshStandardMaterial({
+        color: 0x555555,
+        map: wallTexture,
+        normalScale: new THREE.Vector2(1, -1),
+        roughness: 1,
+      }); 
+
+    // const wallMaterial = new THREE.MeshStandardMaterial({ color: 0xaaaaaa });
     
     const createMesh = (geometry, position, material) => {
       const mesh = new THREE.Mesh(geometry, material);
@@ -54,28 +73,26 @@ export function createRoom(
       wallMaterial
     );
 
-    // const lighting = false;
-    // if (lighting) {
-    //   const pointLight = new THREE.PointLight(
-    //     0xffa500,       // color
-    //     1.5,            // intensity
-    //     ROOM_SIZE * 2   // distance
+    // if (start || end) {
+    //   const spotLight = new THREE.SpotLight( 
+    //     start ? 0xe5f6df : 0xff0000
+    //    );
+    //   spotLight.position.set(
+    //     position.x,
+    //     ROOM_HEIGHT,
+    //     position.z
     //   );
 
-    //   // Settings
-    //   pointLight.position.set(position.x, ROOM_HEIGHT, position.z );
-    //   pointLight.shadow.camera.near = 0.1;
-    //   pointLight.shadow.camera.far = 100;
-    //   pointLight.shadow.mapSize.width = 1024;
-    //   pointLight.shadow.mapSize.height = 1024;
-    //   pointLight.castShadow = true;
-    //   pointLight.shadow.radius = 2; //Blur the shadow to make it softer
-    //   pointLight.shadow.bias = -0.006; //Small bias can help reduce shadow artifacts
+    //   spotLight.castShadow = true;
 
-    //   scene_.add(pointLight);
+    //   spotLight.shadow.mapSize.width = 1024;
+    //   spotLight.shadow.mapSize.height = 1024;
 
-    //   const pointLightHelper = new THREE.PointLightHelper(pointLight, 1);
-    //   scene_.add(pointLightHelper);
+    //   spotLight.shadow.camera.near = 500;
+    //   spotLight.shadow.camera.far = 4000;
+    //   spotLight.shadow.camera.fov = 30;
+      
+    //   scene_.add(spotLight)
     // }
   
     // Debugging

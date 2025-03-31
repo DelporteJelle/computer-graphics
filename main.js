@@ -263,8 +263,8 @@ export class Main {
       this.scene_.add(ambientLight);
   
       this.playerlight_ = new THREE.PointLight(
-        0xffffff,
-        1,              // Intensity 
+        0xffffc5,
+        2.5,              // Intensity 
         ROOM_SIZE * 2.5,  // Distance
         0.5             // Decay 
       ); 

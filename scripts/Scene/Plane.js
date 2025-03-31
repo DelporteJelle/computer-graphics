@@ -1,7 +1,7 @@
 import * as THREE from "https://cdn.skypack.dev/three@0.136";
 
 import { ROOM_SIZE } from "../../config";
-import { TILES_CERAMIC_WHITE } from "../../textures";
+import { SLATE_FLOOR_TILE } from "../../textures";
 
 /**
  * Creates a plane with given params
@@ -17,18 +17,18 @@ export function createPlane(
   const textureLoader = new THREE.TextureLoader();
 
   const planeTexture = textureLoader.load(
-    TILES_CERAMIC_WHITE.baseColor,
+    SLATE_FLOOR_TILE.baseColor,
     (texture) => {
       texture.wrapS = THREE.RepeatWrapping;
       texture.wrapT = THREE.RepeatWrapping;
       texture.repeat.set(5, 5);
     }
   );
-  const normalMap = textureLoader.load(TILES_CERAMIC_WHITE.normalMap);
+  const normalMap = textureLoader.load(SLATE_FLOOR_TILE.normalMap);
   const displacementMap = textureLoader.load(
-    TILES_CERAMIC_WHITE.displacementMap
+    SLATE_FLOOR_TILE.displacementMap
   );
-  const roughnessMap = textureLoader.load(TILES_CERAMIC_WHITE.roughnessMap);
+  const roughnessMap = textureLoader.load(SLATE_FLOOR_TILE.roughnessMap);
 
   let total_width = width * ROOM_SIZE;
   let total_depth = depth * ROOM_SIZE;
