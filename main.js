@@ -53,6 +53,7 @@ export class Main {
     this.playerOnFloor_ = null;
     this.mouseTime_ = null;
     this.keyStates_ = null;
+    this.playerlight_ = null;
 
     // Maze
     this.sceneBuilder_ = null;
@@ -81,6 +82,9 @@ export class Main {
     );
   }
 
+  /**
+   * Initializes render
+   */
   initializeRenderer_() {
     this.renderer_ = new THREE.WebGLRenderer({ antialias: true });
     this.renderer_.setPixelRatio(window.devicePixelRatio);
@@ -92,6 +96,9 @@ export class Main {
     document.body.appendChild(this.renderer_.domElement);
   }
 
+  /**
+   * Initializes variables like octree and scene
+   */
   initializeVariables_() {
     this.stats_ = new Stats();
     this.clock_ = new THREE.Clock();
@@ -121,6 +128,9 @@ export class Main {
     );
   }
 
+  /**
+   * Initializes the scene
+   */
   initializeScene_() {
     this.scene_.background = new THREE.Color(0x88ccee);
 
@@ -204,21 +214,6 @@ export class Main {
     });
   }
 
-  initializeLights_() {
-    // const fog = new THREE.Fog(0x000000, 2 * ROOM_SIZE, 5 * ROOM_SIZE);
-    // this.scene_.add(fog);
-    
-    const ambientLight = new THREE.AmbientLight(0xfffffff, 0.2);
-    this.scene_.add(ambientLight);
-
-    // const pointLight = new THREE.PointLight(0xffffff, 1, 100);
-    // 
-
-    // this.scene_.add(pointLight);
-    // const pointLightHelper = new THREE.PointLightHelper(pointLight, 1);
-    // this.scene_.add(pointLightHelper);
-  }
-
   initializeCamera_() {
     this.playerController_ = new PlayerController(
       this.target_,
@@ -252,12 +247,31 @@ export class Main {
     this.minimapCamera.lookAt(MAZE_WIDTH / 2, 0, MAZE_DEPTH / 2);
   }
 
-  onWindowResize_() {
-    this.camera_.aspect = window.innerWidth / window.innerHeight;
-    this.camera_.updateProjectionMatrix();
+    /**
+   * Initalizes ambient light and pointlight following the player
+   */
+    initializeLights_() {
 
-    this.renderer_.setSize(window.innerWidth, window.innerHeight);
-  }
+      // Low ambient lighting
+      const ambientLight = new THREE.AmbientLight(0xfffffff, 0.2);
+      this.scene_.add(ambientLight);
+  
+      this.playerlight_ = new THREE.PointLight(
+        0xffffff,
+        1,              // Intensity 
+        ROOM_SIZE * 2.5,  // Distance
+        0.5             // Decay 
+      ); 
+      // Set position to camera
+      this.playerlight_.position.copy(this.camera_.position);
+
+      // Add to scene
+      this.scene_.add(this.playerlight_);
+
+      // debug
+      const playerlightHelper = new THREE.PointLightHelper(this.playerlight_, 1);
+      this.scene_.add(playerlightHelper);
+    }
 
   updateMinimap_() {
     if (!this.playerDot_) {
@@ -275,6 +289,20 @@ export class Main {
     this.playerDot_.position.set(normalizedX, 0.1, normalizedZ);
   }
 
+  updatePlayerlight() {
+    if (this.playerlight_ && this.camera_) {
+      this.playerlight_.position.copy(
+        this.camera_.position
+      );
+    }
+  }
+
+  onWindowResize_() {
+    this.camera_.aspect = window.innerWidth / window.innerHeight;
+    this.camera_.updateProjectionMatrix();
+    this.renderer_.setSize(window.innerWidth, window.innerHeight);
+  }
+
   animate() {
     const FIXED_TIMESTEP = 1 / 120; // Fixed timestep of 60 FPS so physics are not tied to framerate
     const MAX_TIMESTEP = 0.1; // Maximum timestep to avoid spiral of death
@@ -288,6 +316,7 @@ export class Main {
       this.playerController_.controls(FIXED_TIMESTEP);
       this.playerController_.updatePlayer(FIXED_TIMESTEP);
       this.updateMinimap_();
+      this.updatePlayerlight();
       this.playerController_.teleportPlayerIfOob();
       this.accumulator_ -= FIXED_TIMESTEP;
     }
