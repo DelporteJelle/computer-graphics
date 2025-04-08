@@ -22,9 +22,14 @@ import { ICE_TEXTURE, TILES_CERAMIC_WHITE } from "./textures";
  */
 import {
   STEPS_PER_FRAME,
-  MAZE_WIDTH, MAZE_DEPTH, MAZE_RATIO,
-  ROOM_SIZE, ROOM_HEIGHT,
-  GRAVITY, JUMP_FORCE, MAX_SPEED,
+  MAZE_WIDTH,
+  MAZE_DEPTH,
+  MAZE_RATIO,
+  ROOM_SIZE,
+  ROOM_HEIGHT,
+  GRAVITY,
+  JUMP_FORCE,
+  MAX_SPEED,
   CAMERA_ANGLE_CAP,
   MINIMAP_SIZE,
 } from "./config";
@@ -53,6 +58,7 @@ export class Main {
     this.mouseTime_ = null;
     this.keyStates_ = null;
     this.playerlight_ = null;
+    this.playerTile_ = null; //The tile the player is standing on
 
     // Maze
     this.sceneBuilder_ = null;
@@ -241,7 +247,7 @@ export class Main {
     //Can be used to add UI elements (such as minimap, crosshair, etc.)
     this.minimapCamera = new THREE.OrthographicCamera(
       -MAZE_WIDTH / 2 - 1,
-      MAZE_WIDTH / 2 ,
+      MAZE_WIDTH / 2,
       MAZE_DEPTH / 2 + 1,
       -MAZE_DEPTH / 2,
       0.1,
@@ -253,45 +259,47 @@ export class Main {
     this.minimapCamera.lookAt(MAZE_WIDTH / 2, 0, MAZE_DEPTH / 2);
   }
 
-    /**
-    * Initalizes ambient light and pointlight following the player
-    */
-    initializeLights_() {
+  /**
+   * Initalizes ambient light and pointlight following the player
+   */
+  initializeLights_() {
+    // Low ambient lighting
+    const ambientLight = new THREE.AmbientLight(0xfffffff, 0.2);
+    this.scene_.add(ambientLight);
 
-      // Low ambient lighting
-      const ambientLight = new THREE.AmbientLight(0xfffffff, 0.2);
-      this.scene_.add(ambientLight);
-  
-      this.playerlight_ = new THREE.PointLight(
-        0xffffc5,
-        2.5,              // Intensity 
-        ROOM_SIZE * 2.5,  // Distance
-        0.5             // Decay 
-      ); 
-      // Set position to camera
-      this.playerlight_.position.copy(this.camera_.position);
+    this.playerlight_ = new THREE.PointLight(
+      0xffffc5,
+      2.5, // Intensity
+      ROOM_SIZE * 2.5, // Distance
+      0.5 // Decay
+    );
+    // Set position to camera
+    this.playerlight_.position.copy(this.camera_.position);
 
-      // Enable shadows
-      this.playerlight_.shadow.camera.near = 0.1;
-      this.playerlight_.shadow.camera.far = 100;
-      this.playerlight_.shadow.mapSize.width = 1024;
-      this.playerlight_.shadow.mapSize.height = 1024;
-      this.playerlight_.castShadow = true;
-      this.playerlight_.shadow.radius = 2; //Blur the shadow to make it softer
-      this.playerlight_.shadow.bias = -0.006; //Small bias can help reduce shadow artifacts
-      
-      // Add to scene
-      this.scene_.add(this.playerlight_);
+    // Enable shadows
+    this.playerlight_.shadow.camera.near = 0.1;
+    this.playerlight_.shadow.camera.far = 100;
+    this.playerlight_.shadow.mapSize.width = 1024;
+    this.playerlight_.shadow.mapSize.height = 1024;
+    this.playerlight_.castShadow = true;
+    this.playerlight_.shadow.radius = 2; //Blur the shadow to make it softer
+    this.playerlight_.shadow.bias = -0.006; //Small bias can help reduce shadow artifacts
 
-      // debug
-      // const playerlightHelper = new THREE.PointLightHelper(this.playerlight_, 1);
-      // this.scene_.add(playerlightHelper);
-    }
+    // Add to scene
+    this.scene_.add(this.playerlight_);
+
+    // debug
+    // const playerlightHelper = new THREE.PointLightHelper(this.playerlight_, 1);
+    // this.scene_.add(playerlightHelper);
+  }
 
   /**
-   * Updates player position on minimap
+   * Handle player location change
+   * - Updates player dot on minimap
+   * - Updates shortest path
+   * TODO: Turn on light in rooms when player enters
    */
-  updateMinimap_() {
+  handlePlayerLocationChange_() {
     if (!this.playerDot_) {
       const geometry = new THREE.CircleGeometry(0.2, 16);
       const material = new THREE.MeshBasicMaterial({ color: 0x0000ff });
@@ -304,6 +312,18 @@ export class Main {
     const normalizedX = playerPosition.x / ROOM_SIZE;
     const normalizedZ = playerPosition.z / ROOM_SIZE;
 
+    //Get the tile position of the player
+    const tileX = Math.floor(normalizedX + 0.5);
+    const tileZ = Math.floor(normalizedZ + 0.5);
+    if (
+      !this.playerTile_ ||
+      this.playerTile_.x != tileX ||
+      this.playerTile_.y != tileZ
+    ) {
+      this.playerTile_ = this.mazeGeneratorVariant_.tiles[tileX][tileZ];
+      this.mazeGeneratorVariant_.shortestPath(this.minimapScene_, tileX, tileZ);
+    }
+
     this.playerDot_.position.set(normalizedX, 0.1, normalizedZ);
   }
 
@@ -312,9 +332,7 @@ export class Main {
    */
   updatePlayerlight() {
     if (this.playerlight_ && this.camera_) {
-      this.playerlight_.position.copy(
-        this.camera_.position
-      );
+      this.playerlight_.position.copy(this.camera_.position);
     }
   }
 
@@ -336,7 +354,7 @@ export class Main {
     while (this.accumulator_ >= FIXED_TIMESTEP) {
       this.playerController_.controls(FIXED_TIMESTEP);
       this.playerController_.updatePlayer(FIXED_TIMESTEP);
-      this.updateMinimap_();
+      this.handlePlayerLocationChange_();
       this.updatePlayerlight();
       this.playerController_.teleportPlayerIfOob();
       this.accumulator_ -= FIXED_TIMESTEP;

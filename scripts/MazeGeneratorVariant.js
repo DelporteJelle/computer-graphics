@@ -83,6 +83,7 @@ export class MazeGeneratorVariant {
       }
 
       max_distance_tile.end = true;
+      max_distance_tile.playerDest = true;
 
       //Remove walls between hallways to create loops, by using the hall_id property. The smaller the difference between hall_id, the closer the hallways are towards each other
       //We can use the amound of difference to control how big the "shortcuts" may be.
@@ -111,38 +112,14 @@ export class MazeGeneratorVariant {
           }
         }
       }
-
-      this.printMaze();
+      console.log("Finished generating maze!");
       resolve();
     });
   }
 
   /**
-   * Prints maze in console
-   */
-  printMaze() {
-    for (let i = 0; i < this.tiles.length; i++) {
-      let row = "";
-      for (let j = 0; j < this.tiles[i].length; j++) {
-        let t = this.tiles[i][j];
-        row += "|";
-        // row += t.distance_to_start.toString().padStart(3, " ");
-        if (t.has_shortcut) {
-          // Add red and bold formatting using ANSI escape codes
-          row += `\x1b[1m\x1b[31m${t.hall_id
-            .toString()
-            .padStart(3, " ")}\x1b[0m`;
-        } else {
-          row += t.hall_id.toString().padStart(3, " ");
-        }
-      }
-      //console.log(row);
-    }
-  }
-
-  /**
    * Draws maze on the minimap
-   * @param {*} scene_ 
+   * @param {*} scene_
    */
   drawMaze(scene_) {
     const lineMaterial = new THREE.LineBasicMaterial({ color: 0xffffff });
@@ -197,12 +174,61 @@ export class MazeGeneratorVariant {
           ]);
           mazeGroup.add(new THREE.Line(geometry, lineMaterial));
         }
+        if (tile.pathToDest) {
+          const geometry = new THREE.CircleGeometry(0.1, 16);
+          const material = new THREE.MeshBasicMaterial({ color: 0xff00ff });
+          const pathTileMesh = new THREE.Mesh(geometry, material);
+          pathTileMesh.rotation.x = -Math.PI / 2;
+          pathTileMesh.position.set(i, 0.05, j);
+          mazeGroup.add(pathTileMesh);
+          console.log("Path dot added at:", i, j);
+        }
       }
     }
 
     scene_.add(mazeGroup);
   }
 
+  /**
+   * Finds the shortest path between two tiles using breadth-first search
+   * @param {Tile} src The player tile
+   * @param {Tile} dest The destination tile for the path
+   */
+  shortestPath(scene, src_x, src_y) {
+    console.log("Finding shortest path to tile...");
+    this.shortestPathIterative(this.tiles[src_x][src_y]);
+
+    this.drawMaze(scene);
+  }
+
+  shortestPathIterative(src) {
+    let queue = [src];
+    let visited = new Set();
+    let parentMap = new Map();
+    visited.add(src);
+
+    while (queue.length > 0) {
+      let current = queue.shift();
+
+      if (current.playerDest) {
+        let pathTile = current;
+        while (pathTile) {
+          pathTile.pathToDest = true;
+          pathTile = parentMap.get(pathTile);
+        }
+        break;
+      }
+
+      let neighbours = this.getPossibleNeighbours(current);
+      for (let neighbour of neighbours) {
+        if (!visited.has(neighbour)) {
+          visited.add(neighbour);
+          parentMap.set(neighbour, current);
+          queue.push(neighbour);
+        }
+      }
+    }
+  }
   /**
    * Gets all neighbours from a tile
    * @param {Tile} tile
@@ -222,6 +248,21 @@ export class MazeGeneratorVariant {
           loc.x >= 0 && loc.x < this.width && loc.y >= 0 && loc.y < this.depth
       )
       .map((loc) => this.tiles[loc.x][loc.y]); // Map to tile
+    return neighbours;
+  }
+
+  /**
+   * Get all the neighbours of a tile that are possible to move to
+   * @param {Tile} tile
+   */
+  getPossibleNeighbours(tile) {
+    let neighbours = this.getNeighbors(tile).filter(
+      (neighbour) =>
+        (neighbour.x > tile.x && !tile.E) ||
+        (neighbour.x < tile.x && !tile.W) ||
+        (neighbour.y > tile.y && !tile.S) ||
+        (neighbour.y < tile.y && !tile.N)
+    );
     return neighbours;
   }
 
@@ -271,5 +312,8 @@ export class Tile {
     this.W = true;
     this.end = false; //True for the end tile
     this.start = false; //True for the start tile
+    this.playerLoc = false; //True if player is standing on this tile
+    this.playerDest = false; //True if the player has set a destination on this tile
+    this.pathToDest = false; //All tiles that are part of the path to the destination tile
   }
 }
