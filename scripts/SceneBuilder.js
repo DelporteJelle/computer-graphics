@@ -16,11 +16,18 @@ import { color, roughness } from "three/tsl";
 /**
  * Config
  */
-import { WALL_DEPTH,
-  STEPS_PER_FRAME, MAZE_WIDTH, MAZE_DEPTH,
-  ROOM_SIZE, ROOM_HEIGHT, GRAVITY,
-  JUMP_FORCE, MAX_SPEED, CAMERA_ANGLE_CAP
- } from "../config";
+import {
+  WALL_DEPTH,
+  STEPS_PER_FRAME,
+  MAZE_WIDTH,
+  MAZE_DEPTH,
+  ROOM_SIZE,
+  ROOM_HEIGHT,
+  GRAVITY,
+  JUMP_FORCE,
+  MAX_SPEED,
+  CAMERA_ANGLE_CAP,
+} from "../config";
 
 /**
  * Textures
@@ -111,9 +118,9 @@ export class SceneBuilder {
 
   /**
    * creates a mesh with given geometry, material and position
-   * @param {*} geometry 
-   * @param {*} material 
-   * @param {*} position 
+   * @param {*} geometry
+   * @param {*} material
+   * @param {*} position
    */
   createMesh(geometry, material, position) {
     const mesh = new THREE.Mesh(geometry, material);
@@ -126,38 +133,29 @@ export class SceneBuilder {
 
   /**
    * Builds maze from grid of generated tiles
-   * @param {*} tiles 
+   * @param {*} tiles
    */
   buildMaze(tiles) {
     for (let i = 0; i < MAZE_WIDTH; i++) {
       for (let j = 0; j < MAZE_DEPTH; j++) {
         let tile = tiles[i][j];
-        createRoom(
-          this.scene_,
-          this.worldOctree_,
-          new THREE.Vector3(i, 0, j),
-          { 
-            N: tile.N, 
-            E: i == MAZE_WIDTH - 1 ? true : false, //Only place East wall if it's the last tile in the row
-            S: j == MAZE_DEPTH - 1 ? true : false, //Only place South wall if it's the last tile in the column
-            W: tile.W,
-            start: tile.start,
-            end: tile.end
-          }
-        );
+        createRoom(this.scene_, this.worldOctree_, new THREE.Vector3(i, 0, j), {
+          N: tile.N,
+          E: i == MAZE_WIDTH - 1 ? true : false, //Only place East wall if it's the last tile in the row
+          S: j == MAZE_DEPTH - 1 ? true : false, //Only place South wall if it's the last tile in the column
+          W: tile.W,
+          start: tile.start,
+          end: tile.end,
+        });
       }
     }
   }
 
   createPlane(width, depth, height) {
-    createPlane(
-      this.scene_,
-      this.worldOctree_,
-      {
-        width,
-        depth,
-        height
-      }
-    )
+    createPlane(this.scene_, this.worldOctree_, {
+      width,
+      depth,
+      height,
+    });
   }
 }

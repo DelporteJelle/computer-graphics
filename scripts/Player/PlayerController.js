@@ -96,22 +96,34 @@ export class PlayerController {
       }
     }
   }
-  
+
   updatePlayer(deltaTime) {
     if (!this.playerOnFloor_) {
-      this.playerVelocity_.y -= this.GRAVITY * deltaTime;
+      this.playerVelocity_.y -= this.GRAVITY * deltaTime; // Apply gravity to the y velocity
     }
 
+    // Apply damping only to the horizontal components (x and z)
     const damping = this.playerOnFloor_ ? 0.92 : 0.998;
-    this.playerVelocity_.multiplyScalar(damping);
-    //Cap the player speed to a maximum of 10
-    this.playerVelocity_.clampLength(0, this.MAX_SPEED);
+    this.playerVelocity_.x *= damping;
+    this.playerVelocity_.z *= damping;
 
+    // Cap the player speed to a maximum of MAX_SPEED for horizontal movement
+    const horizontalSpeed = Math.sqrt(
+      this.playerVelocity_.x ** 2 + this.playerVelocity_.z ** 2
+    );
+    if (horizontalSpeed > this.MAX_SPEED) {
+      const scale = this.MAX_SPEED / horizontalSpeed;
+      this.playerVelocity_.x *= scale;
+      this.playerVelocity_.z *= scale;
+    }
+
+    // Calculate the delta position based on the velocity
     const deltaPosition = this.playerVelocity_
       .clone()
       .multiplyScalar(deltaTime);
     this.playerCollider_.translate(deltaPosition);
 
+    // Handle collisions and update the camera position
     this.playerCollisions();
     this.camera_.position.copy(this.playerCollider_.end);
   }
@@ -140,7 +152,7 @@ export class PlayerController {
    */
   controls(deltaTime) {
     //Defines the speed of the player, this is lower when the player is in the air to give the player only a small amount of control in the air.
-    const speedDelta = deltaTime * (this.playerOnFloor_ ? 100 : 12);
+    const speedDelta = deltaTime * (this.playerOnFloor_ ? 100 : 50);
 
     if (this.keyStates_["KeyW"]) {
       this.playerVelocity_.add(
@@ -161,11 +173,9 @@ export class PlayerController {
     }
 
     if (this.keyStates_["KeyD"]) {
-      this.playerVelocity_.add(
-        this.getSideVector().multiplyScalar(speedDelta)
-      );
+      this.playerVelocity_.add(this.getSideVector().multiplyScalar(speedDelta));
     }
-    
+
     if (this.keyStates_["Space"]) {
       const currentTime = performance.now(); // Get the current time in milliseconds
       if (

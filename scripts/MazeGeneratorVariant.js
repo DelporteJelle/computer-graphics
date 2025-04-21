@@ -181,7 +181,6 @@ export class MazeGeneratorVariant {
           pathTileMesh.rotation.x = -Math.PI / 2;
           pathTileMesh.position.set(i, 0.05, j);
           mazeGroup.add(pathTileMesh);
-          console.log("Path dot added at:", i, j);
         }
       }
     }

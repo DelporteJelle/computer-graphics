@@ -139,7 +139,7 @@ export class Main {
    * - Builds maze room
    * - Draws maze on minimap
    */
-  initializeScene_() {
+  async initializeScene_() {
     this.scene_.background = new THREE.Color(0x88ccee);
 
     // Generate maze and create rooms
@@ -156,57 +156,26 @@ export class Main {
     /**
      * Testing code
      */
-    const textureLoader = new THREE.TextureLoader();
-    const floorTexture = textureLoader.load(
-      ICE_TEXTURE.baseColor,
-      (texture) => {
-        texture.wrapS = THREE.RepeatWrapping;
-        texture.wrapT = THREE.RepeatWrapping;
-        texture.repeat.set(5, 5);
-      }
-    );
-    const normalMap = textureLoader.load(ICE_TEXTURE.normalMap);
-    const displacementMap = textureLoader.load(ICE_TEXTURE.displacementMap);
-    const roughnessMap = textureLoader.load(ICE_TEXTURE.roughnessMap);
-    const floorMaterial = new THREE.MeshStandardMaterial({
-      color: 0x555555,
-      map: floorTexture,
-      normalMap: normalMap,
-      normalScale: new THREE.Vector2(1, -1),
-      displacementMap: displacementMap,
-      displacementScale: 0,
-      roughnessMap: roughnessMap,
-      roughness: 1,
-    });
 
-    this.sceneBuilder_.createMesh(
-      new THREE.BoxGeometry(5, 3, 5),
-      floorMaterial,
-      new THREE.Vector3(0, 0, 0)
-    );
     this.sceneBuilder_.createMesh(
       new THREE.BoxGeometry(4, 5, 4),
       new THREE.MeshStandardMaterial({ color: 0x444444 }),
       new THREE.Vector3(-2, 0, -7)
     );
     this.sceneBuilder_.createMesh(
+      new THREE.BoxGeometry(5, 3, 5),
+      new THREE.MeshStandardMaterial({
+        color: 0x999999,
+      }),
+      new THREE.Vector3(0, 0, 0)
+    );
+    this.sceneBuilder_.createMesh(
       new THREE.BoxGeometry(4, 8, 4),
       new THREE.MeshStandardMaterial({ color: 0x666666 }),
       new THREE.Vector3(-15, 0, -18)
     );
-    this.worldOctree_.fromGraphNode(this.scene_);
 
-    // this.sceneBuilder_.load_glb_object(
-    //   "glb/zombie.glb",
-    //   new THREE.Vector3(-2, 1.5, -2),
-    //   true,
-    //   new THREE.Vector3(0, -Math.PI / 4, 0)
-    // );
-
-    // this.sceneBuilder_.load_glb_object(
-    //   "glb/wooden_chest.glb",
-    //   new THREE.Vector3(2, 1.5, -2)
-    // );
+    // textures
 
     // Create an OctreeHelper to visualize the octree
     const helper = new OctreeHelper(this.worldOctree_);
