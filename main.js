@@ -11,26 +11,21 @@ import { GUI } from "three/addons/libs/lil-gui.module.min.js";
 /**
  * Scripts
  */
-import { SceneBuilder } from "./scripts/SceneBuilder";
-import { PlayerController } from "./scripts/Player/PlayerController";
-import { MazeGenerator } from "./scripts/MazeGenerator";
-import { MazeGeneratorVariant } from "./scripts/MazeGeneratorVariant";
+import SceneBuilder from "./scripts/SceneBuilder";
+import PlayerController from "./scripts/Player/PlayerController";
+import MazeGenerator from "./scripts/MazeGenerator";
+import KeyEvents from "./scripts/KeyEvents"; 
 import { ICE_TEXTURE, TILES_CERAMIC_WHITE } from "./textures";
 
 /**
  * Config
  */
 import {
-  STEPS_PER_FRAME,
   MAZE_WIDTH,
   MAZE_DEPTH,
   MAZE_RATIO,
   ROOM_SIZE,
   ROOM_HEIGHT,
-  GRAVITY,
-  JUMP_FORCE,
-  MAX_SPEED,
-  CAMERA_ANGLE_CAP,
   MINIMAP_SIZE,
 } from "./config";
 
@@ -63,7 +58,6 @@ export class Main {
     // Maze
     this.sceneBuilder_ = null;
     this.mazeGenerator_ = null;
-    this.mazeGeneratorVariant_ = null;
 
     this.initialize_();
   }
@@ -127,7 +121,7 @@ export class Main {
     //this.mazeGenerator_ = new MazeGenerator(MAZE_WIDTH, MAZE_DEPTH);
 
     //Generates a maze with 10x10 tile
-    this.mazeGeneratorVariant_ = new MazeGeneratorVariant(
+    this.mazeGenerator_ = new MazeGenerator(
       MAZE_WIDTH,
       MAZE_DEPTH
     );
@@ -143,15 +137,15 @@ export class Main {
     this.scene_.background = new THREE.Color(0x88ccee);
 
     // Generate maze and create rooms
-    this.mazeGeneratorVariant_.generateMaze().then(() => {
-      this.sceneBuilder_.buildMaze(this.mazeGeneratorVariant_.tiles);
+    this.mazeGenerator_.generateMaze().then(() => {
+      this.sceneBuilder_.buildMaze(this.mazeGenerator_.tiles);
     });
 
     this.sceneBuilder_.createPlane(MAZE_WIDTH, MAZE_DEPTH, 0);
 
     //Draw the maze in the minimap
     this.minimapScene_ = new THREE.Scene();
-    this.mazeGeneratorVariant_.drawMaze(this.minimapScene_);
+    this.mazeGenerator_.drawMaze(this.minimapScene_);
 
     /**
      * Testing code
@@ -196,18 +190,14 @@ export class Main {
    * Initializes player camera, controls and minimap
    */
   initializeCamera_() {
+    KeyEvents.clearEventListeners();
+    const spawnpoint = new THREE.Vector2(
+      this.mazeGenerator_.start_tile.x * ROOM_SIZE,
+      this.mazeGenerator_.start_tile.y * ROOM_SIZE
+    );
+
     this.playerController_ = new PlayerController(
-      this.target_,
-      this.worldOctree_,
-      this.camera_,
-      GRAVITY,
-      JUMP_FORCE,
-      MAX_SPEED,
-      CAMERA_ANGLE_CAP,
-      new THREE.Vector2(
-        this.mazeGeneratorVariant_.start_tile.x * ROOM_SIZE,
-        this.mazeGeneratorVariant_.start_tile.y * ROOM_SIZE
-      )
+      this.worldOctree_, this.camera_, spawnpoint
     );
 
     this.camera_.position.set(0, 5, 10);
@@ -289,8 +279,8 @@ export class Main {
       this.playerTile_.x != tileX ||
       this.playerTile_.y != tileZ
     ) {
-      this.playerTile_ = this.mazeGeneratorVariant_.tiles[tileX][tileZ];
-      this.mazeGeneratorVariant_.shortestPath(this.minimapScene_, tileX, tileZ);
+      this.playerTile_ = this.mazeGenerator_.tiles[tileX][tileZ];
+      this.mazeGenerator_.shortestPath(this.minimapScene_, tileX, tileZ);
     }
 
     this.playerDot_.position.set(normalizedX, 0.1, normalizedZ);

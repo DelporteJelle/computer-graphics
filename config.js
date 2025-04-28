@@ -26,5 +26,15 @@ export const MAX_SPEED = 15;
 /**
  * Player Modifiers
  */
+export const SENSITIVITY = 0.002;
 export const JUMP_COOLDOWN = 300;
 export const MINIMAP_SIZE = 250;
+
+/**
+ * Controls
+ */
+export const KEY_FORWARD = "KeyW";
+export const KEY_BACKWARD = "KeyS";
+export const KEY_LEFT = "KeyA";
+export const KEY_RIGHT = "KeyD";
+export const KEY_JUMP = "Space";

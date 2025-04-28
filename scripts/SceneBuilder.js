@@ -40,7 +40,7 @@ import { ICE_TEXTURE, TILES_CERAMIC_WHITE } from "../textures";
 import { createRoom } from "./Scene/Room";
 import { createPlane } from "./Scene/Plane";
 
-export class SceneBuilder {
+export default class SceneBuilder {
   constructor(debugging = false, octree, scene, ROOM_SIZE, ROOM_HEIGHT) {
     this.ROOM_HEIGHT = ROOM_HEIGHT;
     this.ROOM_SIZE = ROOM_SIZE;

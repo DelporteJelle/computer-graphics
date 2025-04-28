@@ -3,70 +3,65 @@
  */
 import * as THREE from "https://cdn.skypack.dev/three@0.136";
 import { Capsule } from "three/addons/math/Capsule.js";
+import KeyEvents from "../KeyEvents"
 
 /**
  * Config
  */
-import { JUMP_COOLDOWN } from "../../config";
+import * as Config from "../../config";
 
-export class PlayerController {
+export default class PlayerController {
   constructor(
-    target,
     octree,
     camera,
-    GRAVITY,
-    JUMP_FORCE,
-    MAX_SPEED,
-    CAMERA_ANGLE_CAP,
-    SpawnPosition
+    spawnpoint
   ) {
-    this.GRAVITY = GRAVITY;
-    this.JUMP_FORCE = JUMP_FORCE;
-    this.MAX_SPEED = MAX_SPEED;
-    this.CAMERA_ANGLE_CAP = CAMERA_ANGLE_CAP;
     this.worldOctree_ = octree;
-    this.target_ = target || document;
     this.camera_ = camera;
+    this.isPointerLocked = false;
     this.hasDoubleJump = true;
-    this.JUMP_COOLDOWN = JUMP_COOLDOWN;
 
     this.playerCollider_ = new Capsule(
-      new THREE.Vector3(SpawnPosition.x, 1, SpawnPosition.y), //Start point of collision box
-      new THREE.Vector3(SpawnPosition.x, 2, SpawnPosition.y), //End point
+      new THREE.Vector3(spawnpoint.x, 1, spawnpoint.y), //Start point of collision box
+      new THREE.Vector3(spawnpoint.x, 2, spawnpoint.y), //End point
       0.35 //Radius
     );
 
     this.playerVelocity_ = new THREE.Vector3();
     this.playerDirection_ = new THREE.Vector3();
     this.playerOnFloor_ = false;
-    this.mouseTime_ = 0;
-    this.keyStates_ = {};
 
-    //User input is stored in the keyStates so the animate functino can handle the input in next frame.
-    document.addEventListener("keydown", (event) => {
-      this.keyStates_[event.code] = true;
+    KeyEvents.addEventListener(document, 'mousemove', this.onMouseMove_);
+    KeyEvents.addEventListener(document, 'pointerlockchange', this.onPointerLockChange_);
+    KeyEvents.addEventListener(document.body, 'mousedown', () => { 
+      if (!this.isPointerLocked)
+        document.body.requestPointerLock();
     });
 
-    document.addEventListener("keyup", (event) => {
-      this.keyStates_[event.code] = false;
-    });
+  }
 
-    document.body.addEventListener("mousedown", () => {
-      document.body.requestPointerLock();
+  onPointerLockChange_ = () => {
+    if (document.pointerLockElement) {
+      this.isPointerLocked = true;
+      return;
+    }
+    this.isPointerLocked = false;
+  }
 
-      this.mouseTime_ = performance.now();
-    });
+  /**
+   * Changes camera direction based on mouse movement
+   * @param {*} event 
+   * @returns 
+   */
+  onMouseMove_ = (event) => {
+    if (!this.isPointerLocked) return;
 
-    document.body.addEventListener("mousemove", (event) => {
-      if (document.pointerLockElement === document.body) {
-        this.camera_.rotation.y -= event.movementX / 500;
-        this.camera_.rotation.x -= event.movementY / 500;
-        this.camera_.rotation.x = Math.max(
-          -this.CAMERA_ANGLE_CAP,
-          Math.min(this.CAMERA_ANGLE_CAP, this.camera_.rotation.x)
-        );
-      }
-    });
+    this.camera_.rotation.y -= event.movementX * Config.SENSITIVITY;
+    this.camera_.rotation.x -= event.movementY * Config.SENSITIVITY;
+    this.camera_.rotation.x = Math.max(
+      -Config.CAMERA_ANGLE_CAP,
+      Math.min(Config.CAMERA_ANGLE_CAP, this.camera_.rotation.x)
+    );
   }
 
   /**
@@ -99,7 +94,7 @@ export class PlayerController {
 
   updatePlayer(deltaTime) {
     if (!this.playerOnFloor_) {
-      this.playerVelocity_.y -= this.GRAVITY * deltaTime; // Apply gravity to the y velocity
+      this.playerVelocity_.y -= Config.GRAVITY * deltaTime; // Apply gravity to the y velocity
     }
 
     // Apply damping only to the horizontal components (x and z)
@@ -111,8 +106,8 @@ export class PlayerController {
     const horizontalSpeed = Math.sqrt(
       this.playerVelocity_.x ** 2 + this.playerVelocity_.z ** 2
     );
-    if (horizontalSpeed > this.MAX_SPEED) {
-      const scale = this.MAX_SPEED / horizontalSpeed;
+    if (horizontalSpeed > Config.MAX_SPEED) {
+      const scale = Config.MAX_SPEED / horizontalSpeed;
       this.playerVelocity_.x *= scale;
       this.playerVelocity_.z *= scale;
     }
@@ -151,45 +146,30 @@ export class PlayerController {
    * @param {*} deltaTime: time between frames
    */
   controls(deltaTime) {
-    //Defines the speed of the player, this is lower when the player is in the air to give the player only a small amount of control in the air.
+    // Defines the speed of the player, this is lower when the player is in the air to give the player only a small amount of control in the air.
     const speedDelta = deltaTime * (this.playerOnFloor_ ? 100 : 50);
+    // Determine movement
+    const forwardsMovement = KeyEvents.getKeyDown(Config.KEY_FORWARD) - KeyEvents.getKeyDown(Config.KEY_BACKWARD);
+    const sideMovement = KeyEvents.getKeyDown(Config.KEY_RIGHT) - KeyEvents.getKeyDown(Config.KEY_LEFT);
 
-    if (this.keyStates_["KeyW"]) {
-      this.playerVelocity_.add(
-        this.getForwardVector().multiplyScalar(speedDelta)
-      );
-    }
+    // Apply movement
+    this.playerVelocity_.add(this.getForwardVector().multiplyScalar(speedDelta * forwardsMovement));
+    this.playerVelocity_.add(this.getSideVector().multiplyScalar(speedDelta * sideMovement));
 
-    if (this.keyStates_["KeyS"]) {
-      this.playerVelocity_.add(
-        this.getForwardVector().multiplyScalar(-speedDelta)
-      );
-    }
-
-    if (this.keyStates_["KeyA"]) {
-      this.playerVelocity_.add(
-        this.getSideVector().multiplyScalar(-speedDelta)
-      );
-    }
-
-    if (this.keyStates_["KeyD"]) {
-      this.playerVelocity_.add(this.getSideVector().multiplyScalar(speedDelta));
-    }
-
-    if (this.keyStates_["Space"]) {
+    if (KeyEvents.getKeyDown(Config.KEY_JUMP)) {
       const currentTime = performance.now(); // Get the current time in milliseconds
       if (
         !this.lastJumpTime ||
-        currentTime - this.lastJumpTime > this.JUMP_COOLDOWN
+        currentTime - this.lastJumpTime > Config.JUMP_COOLDOWN
       ) {
         if (this.playerOnFloor_) {
-          this.playerVelocity_.y = this.JUMP_FORCE;
+          this.playerVelocity_.y = Config.JUMP_FORCE;
           this.hasDoubleJump = true;
           this.lastJumpTime = currentTime;
         } else if (this.hasDoubleJump) {
           this.playerVelocity_.y = Math.max(
-            this.playerVelocity_.y + this.JUMP_FORCE,
-            this.JUMP_FORCE
+            this.playerVelocity_.y + Config.JUMP_FORCE,
+            Config.JUMP_FORCE
           );
           this.hasDoubleJump = false;
           this.lastJumpTime = currentTime;
