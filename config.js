@@ -7,8 +7,8 @@ export const CAMERA_ANGLE_CAP = Math.PI / 2.3;
 /**
  * Maze Modifiers
  */
-export const MAZE_WIDTH = 2;
-export const MAZE_DEPTH = 2;
+export const MAZE_WIDTH = 10;
+export const MAZE_DEPTH = 10;
 export const MAZE_RATIO = MAZE_WIDTH / MAZE_DEPTH;
 // export const ROOM_SIZE = 0.6;
 // export const ROOM_HEIGHT = 0.1;

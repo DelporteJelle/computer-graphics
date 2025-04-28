@@ -1,7 +1,12 @@
 import * as THREE from "https://cdn.skypack.dev/three@0.136";
 
 import { ROOM_SIZE } from "../../config";
-import { SLATE_FLOOR_TILE, STONE_PATH } from "../../textures";
+import {
+  SLATE_FLOOR_TILE,
+  STONE_PATH,
+  STONE_WALL,
+  STYLIZED_STONE_WALL,
+} from "../../textures";
 import { ao } from "three/examples/jsm/tsl/display/GTAONode.js";
 
 /**
@@ -12,39 +17,37 @@ import { ao } from "three/examples/jsm/tsl/display/GTAONode.js";
  */
 export function createPlane(scene_, octree_, { width, depth, height }) {
   const textureLoader = new THREE.TextureLoader();
+  const texture = STYLIZED_STONE_WALL;
 
-  const planeTexture = textureLoader.load(STONE_PATH.baseColor, (texture) => {
+  const planeTexture = textureLoader.load(texture.baseColor, (texture) => {
     texture.wrapS = THREE.RepeatWrapping;
     texture.wrapT = THREE.RepeatWrapping;
-    texture.repeat.set(5, 5);
+    texture.repeat.set(width, depth);
   });
-  const normalMap = textureLoader.load(STONE_PATH.normalMap, (texture) => {
+  const normalMap = textureLoader.load(texture.normalMap, (texture) => {
     texture.wrapS = THREE.RepeatWrapping;
     texture.wrapT = THREE.RepeatWrapping;
-    texture.repeat.set(5, 5);
+    texture.repeat.set(width, depth);
   });
   const displacementMap = textureLoader.load(
-    STONE_PATH.displacementMap,
+    texture.displacementMap,
     (texture) => {
       texture.wrapS = THREE.RepeatWrapping;
       texture.wrapT = THREE.RepeatWrapping;
-      texture.repeat.set(5, 5);
+      texture.repeat.set(width, depth);
     }
   );
-  const roughnessMap = textureLoader.load(
-    STONE_PATH.roughnessMap,
-    (texture) => {
-      texture.wrapS = THREE.RepeatWrapping;
-      texture.wrapT = THREE.RepeatWrapping;
-      texture.repeat.set(5, 5);
-    }
-  );
+  const roughnessMap = textureLoader.load(texture.roughnessMap, (texture) => {
+    texture.wrapS = THREE.RepeatWrapping;
+    texture.wrapT = THREE.RepeatWrapping;
+    texture.repeat.set(width, depth);
+  });
   const ambientOcclusionMap = textureLoader.load(
-    STONE_PATH.ambienOcclusionMap,
+    texture.ambienOcclusionMap,
     (texture) => {
       texture.wrapS = THREE.RepeatWrapping;
       texture.wrapT = THREE.RepeatWrapping;
-      texture.repeat.set(5, 5);
+      texture.repeat.set(width, depth);
     }
   );
 
@@ -68,7 +71,7 @@ export function createPlane(scene_, octree_, { width, depth, height }) {
     normalMap: normalMap,
     normalScale: new THREE.Vector2(1, -1),
     displacementMap: displacementMap,
-    displacementScale: 0.2,
+    displacementScale: 0.7,
     roughnessMap: roughnessMap,
     roughness: 0.5,
     aoMap: ambientOcclusionMap,

@@ -14,7 +14,7 @@ import { GUI } from "three/addons/libs/lil-gui.module.min.js";
 import SceneBuilder from "./scripts/SceneBuilder";
 import PlayerController from "./scripts/Player/PlayerController";
 import MazeGenerator from "./scripts/MazeGenerator";
-import KeyEvents from "./scripts/KeyEvents"; 
+import KeyEvents from "./scripts/KeyEvents";
 import { ICE_TEXTURE, TILES_CERAMIC_WHITE } from "./textures";
 
 /**
@@ -79,6 +79,11 @@ export class Main {
       },
       false
     );
+
+    //Event listener which handles player clicking the minimap and draws shortest path to clicked tile
+    this.renderer_.domElement.addEventListener("mousedown", (event) => {
+      this.onMinimapClick_(event);
+    });
   }
 
   /**
@@ -121,10 +126,7 @@ export class Main {
     //this.mazeGenerator_ = new MazeGenerator(MAZE_WIDTH, MAZE_DEPTH);
 
     //Generates a maze with 10x10 tile
-    this.mazeGenerator_ = new MazeGenerator(
-      MAZE_WIDTH,
-      MAZE_DEPTH
-    );
+    this.mazeGenerator_ = new MazeGenerator(MAZE_WIDTH, MAZE_DEPTH);
   }
 
   /**
@@ -145,6 +147,8 @@ export class Main {
 
     //Draw the maze in the minimap
     this.minimapScene_ = new THREE.Scene();
+    this.minimapScene_.background = null;
+
     this.mazeGenerator_.drawMaze(this.minimapScene_);
 
     /**
@@ -178,12 +182,6 @@ export class Main {
     /**
      * End Testing code
      */
-
-    // Add a GUI control to toggle the visibility of the OctreeHelper
-    const gui = new GUI({ width: 200 });
-    gui.add({ debug: false }, "debug").onChange(function (value) {
-      helper.visible = value;
-    });
   }
 
   /**
@@ -197,7 +195,9 @@ export class Main {
     );
 
     this.playerController_ = new PlayerController(
-      this.worldOctree_, this.camera_, spawnpoint
+      this.worldOctree_,
+      this.camera_,
+      spawnpoint
     );
 
     this.camera_.position.set(0, 5, 10);
@@ -209,7 +209,7 @@ export class Main {
       MAZE_WIDTH / 2,
       MAZE_DEPTH / 2 + 1,
       -MAZE_DEPTH / 2,
-      0.1,
+      0,
       100
     );
 
@@ -223,7 +223,7 @@ export class Main {
    */
   initializeLights_() {
     // Low ambient lighting
-    const ambientLight = new THREE.AmbientLight(0xfffffff, 0.2);
+    const ambientLight = new THREE.AmbientLight(0xfffffff, 0.5);
     this.scene_.add(ambientLight);
 
     this.playerlight_ = new THREE.PointLight(
@@ -266,11 +266,9 @@ export class Main {
       this.playerDot_.rotation.x = -Math.PI / 2;
       this.minimapScene_.add(this.playerDot_);
     }
-
     const playerPosition = this.camera_.position;
     const normalizedX = playerPosition.x / ROOM_SIZE;
     const normalizedZ = playerPosition.z / ROOM_SIZE;
-
     //Get the tile position of the player
     const tileX = Math.floor(normalizedX + 0.5);
     const tileZ = Math.floor(normalizedZ + 0.5);
@@ -282,7 +280,6 @@ export class Main {
       this.playerTile_ = this.mazeGenerator_.tiles[tileX][tileZ];
       this.mazeGenerator_.shortestPath(this.minimapScene_, tileX, tileZ);
     }
-
     this.playerDot_.position.set(normalizedX, 0.1, normalizedZ);
   }
 
@@ -299,6 +296,49 @@ export class Main {
     this.camera_.aspect = window.innerWidth / window.innerHeight;
     this.camera_.updateProjectionMatrix();
     this.renderer_.setSize(window.innerWidth, window.innerHeight);
+  }
+
+  /**
+   * Handles the user clicking on the minimap and calls the shortest path algo using the clicked tile as the destination
+   * @param {*} event
+   */
+  onMinimapClick_(event) {
+    const rect = this.renderer_.domElement.getBoundingClientRect();
+    const minimapWidth = MINIMAP_SIZE * MAZE_RATIO;
+    const minimapHeight = MINIMAP_SIZE;
+
+    const mouseX = event.clientX - rect.left;
+    const mouseY = event.clientY - rect.top;
+
+    const normalizedMouse = new THREE.Vector2(
+      (mouseX / minimapWidth) * 2 - 1,
+      -((mouseY - (rect.height - minimapHeight)) / minimapHeight) * 2 + 1
+    );
+
+    const raycaster = new THREE.Raycaster();
+    raycaster.setFromCamera(normalizedMouse, this.minimapCamera);
+
+    const intersects = raycaster.intersectObjects(
+      this.minimapScene_.children,
+      true
+    );
+    console.log(intersects);
+    if (intersects.length > 0) {
+      const intersection = intersects[0];
+      if (intersection.object.name != "tile") {
+        console.log("Clicked on non-tile object");
+        return;
+      }
+      const x = intersection.object.userData.x;
+      const y = intersection.object.userData.y;
+      this.mazeGenerator_.shortestPath(
+        this.minimapScene_,
+        this.playerTile_.x,
+        this.playerTile_.y,
+        x,
+        y
+      );
+    }
   }
 
   animate() {
@@ -326,10 +366,27 @@ export class Main {
     this.renderer_.render(this.scene_, this.camera_);
 
     // Render the minimap
+    // this.renderer_.setViewport(
+    //   window.innerWidth - MINIMAP_SIZE * MAZE_RATIO,
+    //   window.innerHeight - MINIMAP_SIZE,
+    //   window.innerWidth,
+    //   window.innerHeight
+    // );
+
     this.renderer_.setViewport(0, 0, MINIMAP_SIZE * MAZE_RATIO, MINIMAP_SIZE);
     this.renderer_.setScissor(0, 0, MINIMAP_SIZE * MAZE_RATIO, MINIMAP_SIZE);
     this.renderer_.setScissorTest(true);
     this.renderer_.render(this.minimapScene_, this.minimapCamera);
+
+    //Experiment with adding a 2nd camera to render the minimap
+    // const playerPosition = this.camera_.position; // Assuming the player's position is tied to the main camera
+    // this.minimapCamera.position.set(playerPosition.x, 100, playerPosition.z); // 50 units above the player
+    // this.minimapCamera.lookAt(playerPosition.x, 0, playerPosition.z); // Look straight down at the player
+
+    // this.renderer_.setViewport(0, 0, MINIMAP_SIZE * MAZE_RATIO, MINIMAP_SIZE);
+    // this.renderer_.setScissor(0, 0, MINIMAP_SIZE * MAZE_RATIO, MINIMAP_SIZE);
+    // this.renderer_.setScissorTest(true);
+    // this.renderer_.render(this.scene_, this.minimapCamera);
 
     this.stats_.update();
   }

@@ -130,6 +130,16 @@ export default class MazeGenerator {
       for (let j = 0; j < this.tiles[i].length; j++) {
         const tile = this.tiles[i][j];
 
+        //Tile mesh purely for onclick handling
+        const geometry = new THREE.BoxGeometry(1, 0, 1);
+        const material = new THREE.MeshBasicMaterial();
+        const tilemesh = new THREE.Mesh(geometry, material);
+        tilemesh.position.set(i, 1, j);
+        tilemesh.userData = { x: i, y: j };
+        tilemesh.visible = false;
+        tilemesh.name = "tile";
+        mazeGroup.add(tilemesh);
+
         if (tile.start) {
           const geometry = new THREE.BoxGeometry(0.7, 0, 0.7);
           const material = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
@@ -184,7 +194,7 @@ export default class MazeGenerator {
         }
       }
     }
-
+    scene_.clear();
     scene_.add(mazeGroup);
   }
 
@@ -193,14 +203,19 @@ export default class MazeGenerator {
    * @param {Tile} src The player tile
    * @param {Tile} dest The destination tile for the path
    */
-  shortestPath(scene, src_x, src_y) {
+  shortestPath(scene, src_x, src_y, dest_x = undefined, dest_y = undefined) {
     console.log("Finding shortest path to tile...");
-    this.shortestPathIterative(this.tiles[src_x][src_y]);
+    this.tiles.forEach((row) => {
+      row.forEach((tile) => {
+        tile.pathToDest = false; // Reset pathToDest for all tiles
+      });
+    });
+    this.shortestPathIterative(this.tiles[src_x][src_y], dest_x, dest_y);
 
     this.drawMaze(scene);
   }
 
-  shortestPathIterative(src) {
+  shortestPathIterative(src, dest_x, dest_y) {
     let queue = [src];
     let visited = new Set();
     let parentMap = new Map();
@@ -209,7 +224,10 @@ export default class MazeGenerator {
     while (queue.length > 0) {
       let current = queue.shift();
 
-      if (current.playerDest) {
+      if (
+        (dest_x && dest_x == current.x && dest_y == current.y) ||
+        current.playerDest
+      ) {
         let pathTile = current;
         while (pathTile) {
           pathTile.pathToDest = true;

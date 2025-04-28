@@ -2,7 +2,14 @@ import * as THREE from "https://cdn.skypack.dev/three@0.136";
 import { RectAreaLightHelper } from "three/addons/helpers/RectAreaLightHelper.js";
 
 import { ROOM_SIZE, ROOM_HEIGHT, WALL_DEPTH } from "../../config";
-import { QUAKE, SLATE_FLOOR_TILE } from "../../textures";
+import {
+  QUAKE,
+  SLATE_FLOOR_TILE,
+  TILES_CERAMIC_WHITE,
+  STONE_WALL,
+  STYLIZED_STONE_WALL,
+} from "../../textures";
+import { color } from "three/tsl";
 
 /**
  * Creates a room
@@ -23,52 +30,47 @@ export function createRoom(
   position.multiply(offset);
 
   const textureLoader = new THREE.TextureLoader();
-
+  const texture = STONE_WALL;
   // const wallTexture = textureLoader.load(QUAKE.wallTiles, (texture) => {
   //   texture.wrapS = THREE.RepeatWrapping;
   //   texture.wrapT = THREE.RepeatWrapping;
   //   texture.repeat.set(3, 3);
   // });
 
-  const normal = textureLoader.load(SLATE_FLOOR_TILE.normalMap, (texture) => {
+  const normal = textureLoader.load(texture.normalMap, (texture) => {
     texture.wrapS = THREE.RepeatWrapping;
     texture.wrapT = THREE.RepeatWrapping;
-    texture.repeat.set(3, 3);
+    texture.repeat.set(1, 1);
   });
   const displacement = textureLoader.load(
-    SLATE_FLOOR_TILE.displacementMap,
+    texture.displacementMap,
     (texture) => {
       texture.wrapS = THREE.RepeatWrapping;
       texture.wrapT = THREE.RepeatWrapping;
-      texture.repeat.set(3, 3);
+      texture.repeat.set(1, 1);
     }
   );
-  const roughness = textureLoader.load(
-    SLATE_FLOOR_TILE.roughnessMap,
-    (texture) => {
-      texture.wrapS = THREE.RepeatWrapping;
-      texture.wrapT = THREE.RepeatWrapping;
-      texture.repeat.set(3, 3);
-    }
-  );
-  const baseColor = textureLoader.load(
-    SLATE_FLOOR_TILE.baseColor,
-    (texture) => {
-      texture.wrapS = THREE.RepeatWrapping;
-      texture.wrapT = THREE.RepeatWrapping;
-      texture.repeat.set(3, 3);
-    }
-  );
+  const roughness = textureLoader.load(texture.roughnessMap, (texture) => {
+    texture.wrapS = THREE.RepeatWrapping;
+    texture.wrapT = THREE.RepeatWrapping;
+    texture.repeat.set(1, 1);
+  });
+  const baseColor = textureLoader.load(texture.baseColor, (texture) => {
+    texture.wrapS = THREE.RepeatWrapping;
+    texture.wrapT = THREE.RepeatWrapping;
+    texture.repeat.set(1, 1);
+  });
 
-  // Updated wall material with mappings
+  // Updated wall material with mappings, these are computationally expensive so I turned them off for now
   const wallMaterial = new THREE.MeshStandardMaterial({
+    color: 0xdddddd,
     map: baseColor, // Base color texture
-    normalMap: normal, // Normal map for surface details
-    displacementMap: displacement, // Displacement map for parallax effect
-    displacementScale: 0.1, // Adjust the scale of the displacement effect
-    roughnessMap: roughness, // Roughness map for surface reflectivity
-    roughness: 1, // Base roughness value
-    metalness: 0, // Non-metallic surface
+    // normalMap: normal, // Normal map for surface details
+    // displacementMap: displacement, // Displacement map for parallax effect
+    // displacementScale: 0.1, // Adjust the scale of the displacement effect
+    // roughnessMap: roughness, // Roughness map for surface reflectivity
+    // roughness: 1, // Base roughness value
+    // metalness: 0, // Non-metallic surface
   });
 
   const createMesh = (geometry, position, material) => {
@@ -83,7 +85,7 @@ export function createRoom(
   // Walls
   if (N)
     createMesh(
-      new THREE.BoxGeometry(ROOM_SIZE, ROOM_HEIGHT, WALL_DEPTH, 10, 10, 10),
+      new THREE.BoxGeometry(ROOM_SIZE, ROOM_HEIGHT, WALL_DEPTH),
       new THREE.Vector3(
         position.x,
         ROOM_HEIGHT / 2,

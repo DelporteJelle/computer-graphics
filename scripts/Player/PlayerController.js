@@ -3,7 +3,7 @@
  */
 import * as THREE from "https://cdn.skypack.dev/three@0.136";
 import { Capsule } from "three/addons/math/Capsule.js";
-import KeyEvents from "../KeyEvents"
+import KeyEvents from "../KeyEvents";
 
 /**
  * Config
@@ -11,11 +11,7 @@ import KeyEvents from "../KeyEvents"
 import * as Config from "../../config";
 
 export default class PlayerController {
-  constructor(
-    octree,
-    camera,
-    spawnpoint
-  ) {
+  constructor(octree, camera, spawnpoint) {
     this.worldOctree_ = octree;
     this.camera_ = camera;
     this.isPointerLocked = false;
@@ -31,13 +27,15 @@ export default class PlayerController {
     this.playerDirection_ = new THREE.Vector3();
     this.playerOnFloor_ = false;
 
-    KeyEvents.addEventListener(document, 'mousemove', this.onMouseMove_);
-    KeyEvents.addEventListener(document, 'pointerlockchange', this.onPointerLockChange_);
-    KeyEvents.addEventListener(document.body, 'mousedown', () => { 
-      if (!this.isPointerLocked)
-        document.body.requestPointerLock();
+    KeyEvents.addEventListener(document, "mousemove", this.onMouseMove_);
+    KeyEvents.addEventListener(
+      document,
+      "pointerlockchange",
+      this.onPointerLockChange_
+    );
+    KeyEvents.addEventListener(document.body, "mousedown", () => {
+      if (!this.isPointerLocked) document.body.requestPointerLock();
     });
-
   }
 
   onPointerLockChange_ = () => {
@@ -46,12 +44,12 @@ export default class PlayerController {
       return;
     }
     this.isPointerLocked = false;
-  }
+  };
 
   /**
    * Changes camera direction based on mouse movement
-   * @param {*} event 
-   * @returns 
+   * @param {*} event
+   * @returns
    */
   onMouseMove_ = (event) => {
     if (!this.isPointerLocked) return;
@@ -62,7 +60,7 @@ export default class PlayerController {
       -Config.CAMERA_ANGLE_CAP,
       Math.min(Config.CAMERA_ANGLE_CAP, this.camera_.rotation.x)
     );
-  }
+  };
 
   /**
    * Checks for intersections between playerCollider and objects in the world
@@ -149,12 +147,20 @@ export default class PlayerController {
     // Defines the speed of the player, this is lower when the player is in the air to give the player only a small amount of control in the air.
     const speedDelta = deltaTime * (this.playerOnFloor_ ? 100 : 50);
     // Determine movement
-    const forwardsMovement = KeyEvents.getKeyDown(Config.KEY_FORWARD) - KeyEvents.getKeyDown(Config.KEY_BACKWARD);
-    const sideMovement = KeyEvents.getKeyDown(Config.KEY_RIGHT) - KeyEvents.getKeyDown(Config.KEY_LEFT);
+    const forwardsMovement =
+      KeyEvents.getKeyDown(Config.KEY_FORWARD) -
+      KeyEvents.getKeyDown(Config.KEY_BACKWARD);
+    const sideMovement =
+      KeyEvents.getKeyDown(Config.KEY_RIGHT) -
+      KeyEvents.getKeyDown(Config.KEY_LEFT);
 
     // Apply movement
-    this.playerVelocity_.add(this.getForwardVector().multiplyScalar(speedDelta * forwardsMovement));
-    this.playerVelocity_.add(this.getSideVector().multiplyScalar(speedDelta * sideMovement));
+    this.playerVelocity_.add(
+      this.getForwardVector().multiplyScalar(speedDelta * forwardsMovement)
+    );
+    this.playerVelocity_.add(
+      this.getSideVector().multiplyScalar(speedDelta * sideMovement)
+    );
 
     if (KeyEvents.getKeyDown(Config.KEY_JUMP)) {
       const currentTime = performance.now(); // Get the current time in milliseconds
