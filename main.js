@@ -331,12 +331,13 @@ export class Main {
       }
       const x = intersection.object.userData.x;
       const y = intersection.object.userData.y;
+
+      this.mazeGenerator_.changeDestinationTile(x, y);
+
       this.mazeGenerator_.shortestPath(
         this.minimapScene_,
         this.playerTile_.x,
-        this.playerTile_.y,
-        x,
-        y
+        this.playerTile_.y
       );
     }
   }

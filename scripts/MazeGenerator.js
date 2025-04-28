@@ -6,6 +6,7 @@ export default class MazeGenerator {
     this.depth = depth;
     this.tiles = [];
     this.stack = [];
+    this.destinationTile = null;
 
     for (let i = 0; i < width; i++) {
       this.tiles[i] = [];
@@ -15,8 +16,8 @@ export default class MazeGenerator {
       }
     }
 
-    // this.start_tile = this.tiles[Math.floor(width / 2)][Math.floor(depth / 2)];
-    this.start_tile = this.tiles[0][0];
+    this.start_tile = this.tiles[Math.floor(width / 2)][Math.floor(depth / 2)];
+    // this.start_tile = this.tiles[0][0];
     this.stack.push(this.start_tile);
     this.start_tile.start = true;
     this.start_tile.distance_to_start = 0;
@@ -84,6 +85,7 @@ export default class MazeGenerator {
 
       max_distance_tile.end = true;
       max_distance_tile.playerDest = true;
+      this.destinationTile = max_distance_tile;
 
       //Remove walls between hallways to create loops, by using the hall_id property. The smaller the difference between hall_id, the closer the hallways are towards each other
       //We can use the amound of difference to control how big the "shortcuts" may be.
@@ -194,7 +196,11 @@ export default class MazeGenerator {
         }
       }
     }
-    scene_.clear();
+    scene_.children.forEach((child) => {
+      if (child instanceof THREE.Group) {
+        scene_.remove(child);
+      }
+    });
     scene_.add(mazeGroup);
   }
 
@@ -203,19 +209,19 @@ export default class MazeGenerator {
    * @param {Tile} src The player tile
    * @param {Tile} dest The destination tile for the path
    */
-  shortestPath(scene, src_x, src_y, dest_x = undefined, dest_y = undefined) {
+  shortestPath(scene, src_x, src_y) {
     console.log("Finding shortest path to tile...");
     this.tiles.forEach((row) => {
       row.forEach((tile) => {
         tile.pathToDest = false; // Reset pathToDest for all tiles
       });
     });
-    this.shortestPathIterative(this.tiles[src_x][src_y], dest_x, dest_y);
+    this.shortestPathIterative(this.tiles[src_x][src_y]);
 
     this.drawMaze(scene);
   }
 
-  shortestPathIterative(src, dest_x, dest_y) {
+  shortestPathIterative(src) {
     let queue = [src];
     let visited = new Set();
     let parentMap = new Map();
@@ -224,10 +230,7 @@ export default class MazeGenerator {
     while (queue.length > 0) {
       let current = queue.shift();
 
-      if (
-        (dest_x && dest_x == current.x && dest_y == current.y) ||
-        current.playerDest
-      ) {
+      if (current.playerDest) {
         let pathTile = current;
         while (pathTile) {
           pathTile.pathToDest = true;
@@ -245,6 +248,12 @@ export default class MazeGenerator {
         }
       }
     }
+  }
+
+  changeDestinationTile(x, y) {
+    this.destinationTile.playerDest = false;
+    this.tiles[x][y].playerDest = true;
+    this.destinationTile = this.tiles[x][y];
   }
   /**
    * Gets all neighbours from a tile
