@@ -27,7 +27,9 @@ import {
   ROOM_SIZE,
   ROOM_HEIGHT,
   MINIMAP_SIZE,
+  TIMER,
 } from "./config";
+import { Vector2 } from "three/webgpu";
 
 /**
  * The Camera and collision code is based on the threejs example:
@@ -69,6 +71,7 @@ export class Main {
     this.initializeScene_();
     this.initializeLights_();
     this.initializeCamera_();
+    this.initializeTimer_();
 
     document.body.appendChild(this.stats_.domElement);
 
@@ -83,6 +86,12 @@ export class Main {
     //Event listener which handles player clicking the minimap and draws shortest path to clicked tile
     this.renderer_.domElement.addEventListener("mousedown", (event) => {
       this.onMinimapClick_(event);
+    });
+
+    window.addEventListener("keydown", (event) => {
+      if (event.key === "p") {
+        this.resetGame_();
+      }
     });
   }
 
@@ -146,6 +155,7 @@ export class Main {
     this.sceneBuilder_.createPlane(MAZE_WIDTH, MAZE_DEPTH, 0);
 
     //Draw the maze in the minimap
+    this.playerDot_ = null;
     this.minimapScene_ = new THREE.Scene();
     this.minimapScene_.background = null;
 
@@ -173,12 +183,6 @@ export class Main {
       new THREE.Vector3(-15, 0, -18)
     );
 
-    // textures
-
-    // Create an OctreeHelper to visualize the octree
-    const helper = new OctreeHelper(this.worldOctree_);
-    helper.visible = false;
-    this.scene_.add(helper);
     /**
      * End Testing code
      */
@@ -253,6 +257,43 @@ export class Main {
   }
 
   /**
+   *
+   */
+  initializeTimer_() {
+    const timer = document.createElement("div");
+    timer.id = "timer";
+    timer.style.position = "absolute";
+    timer.style.top = "10px";
+    timer.style.right = "10px";
+    timer.style.color = "white";
+    timer.style.fontSize = "24px";
+    timer.style.fontFamily = "Arial, sans-serif";
+    timer.style.backgroundColor = "rgba(0, 0, 0, 0.5)";
+    timer.style.padding = "10px";
+    timer.style.borderRadius = "5px";
+    timer.textContent = "60s";
+    document.body.appendChild(timer);
+
+    // Start the countdown timer
+    let remainingTime = TIMER;
+
+    const timerElement = document.getElementById("timer");
+    timerElement.textContent = `${remainingTime}s`;
+
+    const countdownInterval = setInterval(() => {
+      remainingTime--;
+
+      if (remainingTime <= 0) {
+        clearInterval(countdownInterval);
+        timerElement.textContent = "Time's Up!";
+        this.gameOver_();
+      } else {
+        timerElement.textContent = `${remainingTime}s`;
+      }
+    }, 1000); // Update every second
+  }
+
+  /**
    * Handle player location change
    * - Updates player dot on minimap
    * - Updates shortest path
@@ -272,6 +313,9 @@ export class Main {
     //Get the tile position of the player
     const tileX = Math.floor(normalizedX + 0.5);
     const tileZ = Math.floor(normalizedZ + 0.5);
+    this.playerDot_.position.set(normalizedX, 0.1, normalizedZ);
+
+    //Check if the player is in a different tile than before
     if (
       !this.playerTile_ ||
       this.playerTile_.x != tileX ||
@@ -279,8 +323,12 @@ export class Main {
     ) {
       this.playerTile_ = this.mazeGenerator_.tiles[tileX][tileZ];
       this.mazeGenerator_.shortestPath(this.minimapScene_, tileX, tileZ);
+
+      //Reset the maze if the player is on the end tile
+      if (this.playerTile_.end) {
+        this.resetGame_();
+      }
     }
-    this.playerDot_.position.set(normalizedX, 0.1, normalizedZ);
   }
 
   /**
@@ -296,6 +344,36 @@ export class Main {
     this.camera_.aspect = window.innerWidth / window.innerHeight;
     this.camera_.updateProjectionMatrix();
     this.renderer_.setSize(window.innerWidth, window.innerHeight);
+  }
+
+  resetGame_() {
+    this.scene_.clear();
+    this.worldOctree_.clear();
+    this.mazeGenerator_ = new MazeGenerator(MAZE_WIDTH, MAZE_DEPTH);
+    this.initializeScene_();
+    this.initializeLights_();
+    this.playerController_.teleportPlayer(
+      new Vector2(
+        this.mazeGenerator_.start_tile.x * ROOM_SIZE,
+        this.mazeGenerator_.start_tile.y * ROOM_SIZE
+      )
+    );
+  }
+
+  gameOver_() {
+    const text = document.createElement("div");
+    text.id = "game-over-text";
+    text.style.position = "absolute";
+    text.style.top = "50%";
+    text.style.left = "50%";
+    text.style.transform = "translate(-50%, -50%)";
+    text.style.color = "white";
+    text.style.fontSize = "48px";
+    text.style.backgroundColor = "rgba(0, 0, 0, 0.5)";
+    text.style.padding = "20px";
+    text.style.borderRadius = "10px";
+    text.textContent = "Game Over!";
+    document.body.appendChild(text);
   }
 
   /**
@@ -322,7 +400,6 @@ export class Main {
       this.minimapScene_.children,
       true
     );
-    console.log(intersects);
     if (intersects.length > 0) {
       const intersection = intersects[0];
       if (intersection.object.name != "tile") {

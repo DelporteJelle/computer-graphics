@@ -3,6 +3,7 @@
  */
 export const STEPS_PER_FRAME = 5;
 export const CAMERA_ANGLE_CAP = Math.PI / 2.3;
+export const TIMER = 5; // in seconds
 
 /**
  * Maze Modifiers

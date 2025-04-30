@@ -199,4 +199,16 @@ export default class PlayerController {
       this.camera_.rotation.set(0, 0, 0);
     }
   }
+
+  /**
+   * Teleport the player to a specific location in the maze.
+   * @param {Vector2} location
+   */
+  teleportPlayer(location) {
+    this.playerCollider_ = new Capsule(
+      new THREE.Vector3(location.x, 1, location.y), //Start point of collision box
+      new THREE.Vector3(location.x, 2, location.y), //End point
+      0.35 //Radius
+    );
+  }
 }

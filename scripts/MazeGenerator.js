@@ -28,7 +28,7 @@ export default class MazeGenerator {
   /**
    * Randomized depth-first search (https://en.wikipedia.org/wiki/Maze_generation_algorithm)
    *
-   * This algo crreates a maze by going depth first through the tree by visiting all unvisited neighbors of the tiles on the stack
+   * This algo creates a maze by going depth first through the tree by visiting all unvisited neighbors of the tiles on the stack
    * For example, we start with one tile and visit a random neighbor, we then push this one on the stack and repeat until there
    * are no more unvisited tiles.
    * This creates a maze with long hallways.
@@ -43,6 +43,8 @@ export default class MazeGenerator {
       let max_distance = 0;
       let max_distance_tile = this.start_tile;
       let max_hall_id = 0;
+
+      let breadth_first_chance = 1;
 
       while (this.stack.length > 0) {
         //Get first tile from the stack and check if it has any unvisited neighbors
@@ -67,12 +69,16 @@ export default class MazeGenerator {
           }
 
           //Random chance to go breadth first instead of depth first (to create more but shorter hallways)
-          if (Math.random() > 0.7) {
+          if (Math.random() < breadth_first_chance) {
+            breadth_first_chance -= 0.3; // Decrease chance to go breadth first
+            //Cance to go breadth first
             this.stack.push(next); // Push next 1st
             if (unvisited_neighbours.length > 1)
               this.stack.push(current); // Push current 2nd
             else hall_id++;
           } else {
+            breadth_first_chance += 0.1;
+            //Depth first
             if (unvisited_neighbours.length > 1)
               this.stack.push(current); // Push current 1st
             else hall_id++;
@@ -125,7 +131,6 @@ export default class MazeGenerator {
    */
   drawMaze(scene_) {
     const lineMaterial = new THREE.LineBasicMaterial({ color: 0xffffff });
-
     const mazeGroup = new THREE.Group();
 
     for (let i = 0; i < this.tiles.length; i++) {
@@ -187,12 +192,23 @@ export default class MazeGenerator {
           mazeGroup.add(new THREE.Line(geometry, lineMaterial));
         }
         if (tile.pathToDest) {
-          const geometry = new THREE.CircleGeometry(0.1, 16);
-          const material = new THREE.MeshBasicMaterial({ color: 0xff00ff });
-          const pathTileMesh = new THREE.Mesh(geometry, material);
-          pathTileMesh.rotation.x = -Math.PI / 2;
-          pathTileMesh.position.set(i, 0.05, j);
-          mazeGroup.add(pathTileMesh);
+          // Get neighbors that are part of the path
+          const neighbors = this.getPossibleNeighbours(tile).filter(
+            (neighbor) => neighbor.pathToDest
+          );
+
+          // Draw a line to each neighbor that is part of the path
+          for (const neighbor of neighbors) {
+            const geometry = new THREE.BufferGeometry().setFromPoints([
+              new THREE.Vector3(tile.x, 0.05, tile.y), // Current tile position
+              new THREE.Vector3(neighbor.x, 0.05, neighbor.y), // Neighbor tile position
+            ]);
+            const pathLine = new THREE.Line(
+              geometry,
+              new THREE.LineBasicMaterial({ color: 0xff00ff })
+            );
+            mazeGroup.add(pathLine);
+          }
         }
       }
     }
