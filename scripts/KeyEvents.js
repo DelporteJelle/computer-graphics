@@ -7,6 +7,7 @@
 class KeyEvents {
   constructor() {
     this.keyStates_ = {};
+    this.keyPressed_ = {};
     this.initialize();
     }
 
@@ -33,10 +34,19 @@ class KeyEvents {
 
     onKeyUp_ = (event) => {
         this.keyStates_[event.code] = false;
+        this.keyPressed_[event.code] = true;
     }
 
     getKeyDown(code) {
         return this.keyStates_[code] === undefined ? false : this.keyStates_[code];
+    }
+
+    getKeyPressed(code) {
+        if (this.keyPressed_[code]) {
+            this.keyPressed_[code] = false;
+            return true;
+        }
+        return false;
     }
 
     clearEventListeners() {

@@ -39,6 +39,7 @@ import { ICE_TEXTURE, TILES_CERAMIC_WHITE } from "../textures";
  */
 import { createRoom } from "./Scene/Room";
 import { createPlane } from "./Scene/Plane";
+import createCeiling from "./Scene/Ceiling";
 
 export default class SceneBuilder {
   constructor(debugging = false, octree, scene, ROOM_SIZE, ROOM_HEIGHT) {
@@ -153,6 +154,14 @@ export default class SceneBuilder {
 
   createPlane(width, depth, height) {
     createPlane(this.scene_, this.worldOctree_, {
+      width,
+      depth,
+      height,
+    });
+  }
+
+  createCeiling(width, depth, height) {
+    createCeiling(this.scene_, this.worldOctree_, {
       width,
       depth,
       height,

@@ -11,9 +11,10 @@ import KeyEvents from "../KeyEvents";
 import * as Config from "../../config";
 
 export default class PlayerController {
-  constructor(octree, camera, spawnpoint) {
+  constructor(octree, camera, spawnpoint, flashlight) {
     this.worldOctree_ = octree;
     this.camera_ = camera;
+    this.flashlight_ = flashlight;
     this.isPointerLocked = false;
     this.hasDoubleJump = true;
 
@@ -181,6 +182,10 @@ export default class PlayerController {
           this.lastJumpTime = currentTime;
         }
       }
+    }
+
+    if (KeyEvents.getKeyPressed(Config.KEY_TOGGLE_FLASHLIGHT)) {
+      this.flashlight_.toggleLight();
     }
 
     // if (this.playerOnFloor_) {

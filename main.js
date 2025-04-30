@@ -7,6 +7,7 @@ import { Octree } from "three/addons/math/Octree.js";
 import { OctreeHelper } from "three/addons/helpers/OctreeHelper.js";
 import { Capsule } from "three/addons/math/Capsule.js";
 import { GUI } from "three/addons/libs/lil-gui.module.min.js";
+import { Vector2 } from "three/webgpu";
 
 /**
  * Scripts
@@ -29,7 +30,8 @@ import {
   MINIMAP_SIZE,
   TIMER,
 } from "./config";
-import { Vector2 } from "three/webgpu";
+
+import Flashlight from "./scripts/Player/Flashlight";
 
 /**
  * The Camera and collision code is based on the threejs example:
@@ -153,6 +155,7 @@ export class Main {
     });
 
     this.sceneBuilder_.createPlane(MAZE_WIDTH, MAZE_DEPTH, 0);
+    this.sceneBuilder_.createCeiling(MAZE_WIDTH, MAZE_DEPTH, ROOM_HEIGHT);
 
     //Draw the maze in the minimap
     this.playerDot_ = null;
@@ -201,7 +204,8 @@ export class Main {
     this.playerController_ = new PlayerController(
       this.worldOctree_,
       this.camera_,
-      spawnpoint
+      spawnpoint,
+      this.playerlight_
     );
 
     this.camera_.position.set(0, 5, 10);
@@ -230,26 +234,10 @@ export class Main {
     const ambientLight = new THREE.AmbientLight(0xfffffff, 0.5);
     this.scene_.add(ambientLight);
 
-    this.playerlight_ = new THREE.PointLight(
-      0xffffc5,
-      2.5, // Intensity
-      ROOM_SIZE * 2.5, // Distance
-      0.5 // Decay
-    );
-    // Set position to camera
-    this.playerlight_.position.copy(this.camera_.position);
-
-    // Enable shadows
-    this.playerlight_.shadow.camera.near = 0.1;
-    this.playerlight_.shadow.camera.far = 100;
-    this.playerlight_.shadow.mapSize.width = 1024;
-    this.playerlight_.shadow.mapSize.height = 1024;
-    this.playerlight_.castShadow = true;
-    this.playerlight_.shadow.radius = 2; //Blur the shadow to make it softer
-    this.playerlight_.shadow.bias = -0.006; //Small bias can help reduce shadow artifacts
-
-    // Add to scene
-    this.scene_.add(this.playerlight_);
+    // Flashlight
+    this.playerlight_ = new Flashlight(this.camera_);
+    this.scene_.add(this.playerlight_.light);
+    this.scene_.add(this.playerlight_.target)
 
     // debug
     // const playerlightHelper = new THREE.PointLightHelper(this.playerlight_, 1);
@@ -336,7 +324,7 @@ export class Main {
    */
   updatePlayerlight() {
     if (this.playerlight_ && this.camera_) {
-      this.playerlight_.position.copy(this.camera_.position);
+      this.playerlight_.update();
     }
   }
 

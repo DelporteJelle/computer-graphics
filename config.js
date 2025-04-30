@@ -3,7 +3,7 @@
  */
 export const STEPS_PER_FRAME = 5;
 export const CAMERA_ANGLE_CAP = Math.PI / 2.3;
-export const TIMER = 5; // in seconds
+export const TIMER = 60; // in seconds
 
 /**
  * Maze Modifiers
@@ -39,3 +39,4 @@ export const KEY_BACKWARD = "KeyS";
 export const KEY_LEFT = "KeyA";
 export const KEY_RIGHT = "KeyD";
 export const KEY_JUMP = "Space";
+export const KEY_TOGGLE_FLASHLIGHT = "KeyT";

@@ -1,13 +1,9 @@
 import * as THREE from "https://cdn.skypack.dev/three@0.136";
 
 import { ROOM_SIZE } from "../../config";
-import {
-  SLATE_FLOOR_TILE,
-  STONE_PATH,
-  STONE_WALL,
-  STYLIZED_STONE_WALL,
-} from "../../textures";
+import { METAL_PLATES } from "../../textures";
 import { ao } from "three/examples/jsm/tsl/display/GTAONode.js";
+import { metalness } from "three/tsl";
 
 /**
  * Creates a plane with given params
@@ -17,7 +13,7 @@ import { ao } from "three/examples/jsm/tsl/display/GTAONode.js";
  */
 export function createPlane(scene_, octree_, { width, depth, height }) {
   const textureLoader = new THREE.TextureLoader();
-  const texture = STYLIZED_STONE_WALL;
+  const texture = METAL_PLATES;
 
   const planeTexture = textureLoader.load(texture.baseColor, (texture) => {
     texture.wrapS = THREE.RepeatWrapping;
@@ -43,7 +39,7 @@ export function createPlane(scene_, octree_, { width, depth, height }) {
     texture.repeat.set(width, depth);
   });
   const ambientOcclusionMap = textureLoader.load(
-    texture.ambienOcclusionMap,
+    texture.ambientOcclusionMap,
     (texture) => {
       texture.wrapS = THREE.RepeatWrapping;
       texture.wrapT = THREE.RepeatWrapping;
@@ -71,11 +67,12 @@ export function createPlane(scene_, octree_, { width, depth, height }) {
     normalMap: normalMap,
     normalScale: new THREE.Vector2(1, -1),
     displacementMap: displacementMap,
-    displacementScale: 0.7,
+    displacementScale: 0.2,
     roughnessMap: roughnessMap,
     roughness: 0.5,
     aoMap: ambientOcclusionMap,
     aoMapIntensity: 1,
+    metalness: 0.3,
   });
   const visualPlane = new THREE.Mesh(visualPlaneGeometry, visualPlaneMaterial);
   visualPlane.rotation.x = -Math.PI / 2;

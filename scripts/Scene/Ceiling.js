@@ -1,73 +1,107 @@
+import * as THREE from "https://cdn.skypack.dev/three@0.136";
+import * as Config from "../../config";
+import { SLATE_FLOOR_TILE, METAL_WALKWAY } from "../../textures";
+
 export default function createCeiling(scene_, octree_, { width, depth, height })  {
   const textureLoader = new THREE.TextureLoader();
-  
-    const planeTexture = textureLoader.load(STONE_PATH.baseColor, (texture) => {
+  const texture = METAL_WALKWAY;
+
+  const ceilingTexture = textureLoader.load(texture.baseColor, (texture) => {
+    texture.wrapS = THREE.RepeatWrapping;
+    texture.wrapT = THREE.RepeatWrapping;
+    texture.repeat.set(width, depth);
+  });
+  const normalMap = textureLoader.load(texture.normalMap, (texture) => {
+    texture.wrapS = THREE.RepeatWrapping;
+    texture.wrapT = THREE.RepeatWrapping;
+    texture.repeat.set(width, depth);
+  });
+  const displacementMap = textureLoader.load(
+    texture.displacementMap,
+    (texture) => {
       texture.wrapS = THREE.RepeatWrapping;
       texture.wrapT = THREE.RepeatWrapping;
-      texture.repeat.set(5, 5);
-    });
-    const normalMap = textureLoader.load(STONE_PATH.normalMap, (texture) => {
+      texture.repeat.set(width, depth);
+  });
+  const roughnessMap = textureLoader.load(texture.roughnessMap, (texture) => {
+    texture.wrapS = THREE.RepeatWrapping;
+    texture.wrapT = THREE.RepeatWrapping;
+    texture.repeat.set(width, depth);
+  });
+  const ambientOcclusionMap = textureLoader.load(
+    texture.ambienOcclusionMap,
+    (texture) => {
       texture.wrapS = THREE.RepeatWrapping;
       texture.wrapT = THREE.RepeatWrapping;
-      texture.repeat.set(5, 5);
-    });
-    const displacementMap = textureLoader.load(
-      STONE_PATH.displacementMap,
-      (texture) => {
-        texture.wrapS = THREE.RepeatWrapping;
-        texture.wrapT = THREE.RepeatWrapping;
-        texture.repeat.set(5, 5);
-      }
-    );
-    const roughnessMap = textureLoader.load(
-      STONE_PATH.roughnessMap,
-      (texture) => {
-        texture.wrapS = THREE.RepeatWrapping;
-        texture.wrapT = THREE.RepeatWrapping;
-        texture.repeat.set(5, 5);
-      }
-    );
-    const ambientOcclusionMap = textureLoader.load(
-      STONE_PATH.ambienOcclusionMap,
-      (texture) => {
-        texture.wrapS = THREE.RepeatWrapping;
-        texture.wrapT = THREE.RepeatWrapping;
-        texture.repeat.set(5, 5);
-      }
-    );
+      texture.repeat.set(width, depth);
+    }
+  );
+
+  const total_width = width * Config.ROOM_SIZE;
+  const total_depth = depth * Config.ROOM_SIZE;
+  const position = new THREE.Vector3(
+    total_width / 2 - Config.ROOM_SIZE / 2,
+    height,
+    total_depth / 2 - Config.ROOM_SIZE / 2
+  );
+
+  /**
+   * SCENE
+   */
+  const visualCeilingGeometry = new THREE.PlaneGeometry(
+    total_width,
+    total_depth,
+    total_width * 5,
+    total_depth * 5
+  );
+  const visualCeilingMaterial = new THREE.MeshStandardMaterial({
+    color: 0x666666,
+    map: ceilingTexture,
+    normalMap: normalMap,
+    normalScale: new THREE.Vector2(1, -1),
+    displacementMap: displacementMap,
+    displacementScale: 0.7,
+    roughnessMap: roughnessMap,
+    roughness: 0.5,
+    aoMap: ambientOcclusionMap,
+    aoMapIntensity: 1,
+  });
+
+  const visualCeiling = new THREE.Mesh(
+    visualCeilingGeometry, 
+    visualCeilingMaterial
+  );
+
+  visualCeiling.receiveShadow = true;
+  visualCeiling.rotation.x = Math.PI / 2;
+  visualCeiling.position.set(position.x, position.y, position.z);
+
+  // Add visual plane to the scene (not the octree)
+  scene_.add(visualCeiling);
+
+  /**
+   * OCTREE
+   */
+  const collisionCeilingGeometry = new THREE.PlaneGeometry(
+    total_width,
+    total_depth,
+    1, 1
+  );
+
+  const collisionCeilingMaterial = new THREE.MeshBasicMaterial({
+    visible: false,
+  }); 
   
-    let total_width = width * ROOM_SIZE;
-    let total_depth = depth * ROOM_SIZE;
-    let position = new THREE.Vector3(
-      total_width / 2 - ROOM_SIZE / 2,
-      height,
-      total_depth / 2 - ROOM_SIZE / 2
-    );
-  
-    const visualPlaneGeometry = new THREE.PlaneGeometry(
-      total_width,
-      total_depth,
-      total_width * 5, //Subdivisions to make displacement map work
-      total_depth * 5
-    );
-    const visualPlaneMaterial = new THREE.MeshStandardMaterial({
-      color: 0x666666,
-      map: planeTexture,
-      normalMap: normalMap,
-      normalScale: new THREE.Vector2(1, -1),
-      displacementMap: displacementMap,
-      displacementScale: 0.2,
-      roughnessMap: roughnessMap,
-      roughness: 0.5,
-      aoMap: ambientOcclusionMap,
-      aoMapIntensity: 1,
-    });
-    const visualPlane = new THREE.Mesh(visualPlaneGeometry, visualPlaneMaterial);
-    visualPlane.rotation.x = -Math.PI / 2;
-    visualPlane.receiveShadow = true;
-    visualPlane.position.set(position.x, position.y, position.z);
-  
-    // Add visual plane to the scene (not the octree)
-    scene_.add(visualPlane);
-    octree_.add(visualPlane)
+  // Invisible collision plane
+  const collisionCeiling = new THREE.Mesh(
+    collisionCeilingGeometry,
+    collisionCeilingMaterial
+  );
+
+
+  collisionCeiling.rotation.x = -Math.PI / 2;
+  collisionCeiling.position.set(position.x, position.y, position.z);
+
+  // Add collision plane to the octree
+  octree_.fromGraphNode(collisionCeiling);
 }
