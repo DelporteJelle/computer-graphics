@@ -22,13 +22,12 @@ import { ICE_TEXTURE, TILES_CERAMIC_WHITE } from "./textures";
  * Config
  */
 import {
-  MAZE_WIDTH,
-  MAZE_DEPTH,
-  MAZE_RATIO,
   ROOM_SIZE,
   ROOM_HEIGHT,
   MINIMAP_SIZE,
   TIMER,
+  STARTER_MAZE_DEPTH,
+  STARTER_MAZE_WIDTH,
 } from "./config";
 
 import Flashlight from "./scripts/Player/Flashlight";
@@ -62,18 +61,22 @@ export class Main {
     // Maze
     this.sceneBuilder_ = null;
     this.mazeGenerator_ = null;
+    this.MAZE_WIDTH = STARTER_MAZE_WIDTH; // Width of the maze in tiles
+    this.MAZE_DEPTH = STARTER_MAZE_DEPTH; // Depth of the maze in tiles
+    this.remainingTime_ = TIMER; // Timer for the game
 
     this.initialize_();
   }
 
   initialize_() {
     //Order is important, Keep this order of initialization
-    this.initializeVariables_();
-    this.initializeRenderer_();
-    this.initializeScene_();
-    this.initializeLights_();
-    this.initializeCamera_();
-    this.initializeTimer_();
+    this.initializeVariables_(); //Initializes basic static variables
+    this.initializeRenderer_(); //Initializes the renderer
+    this.initializeScene_(); //Generates the maze and builds the scene
+    this.initializeLights_(); //Initializes the lights
+    this.initializeCamera_(); //Initializes playerController and camera
+    this.initializeMinimap_(); //Initializes the minimap
+    this.initializeTimer_(); //Initializes the timer
 
     document.body.appendChild(this.stats_.domElement);
 
@@ -123,21 +126,8 @@ export class Main {
       70,
       window.innerWidth / window.innerHeight,
       0.1,
-      1000
+      100
     );
-
-    //contains helper functions to build the scene. Pass true to enable debugging features
-    this.sceneBuilder_ = new SceneBuilder(
-      true,
-      this.worldOctree_,
-      this.scene_,
-      ROOM_SIZE,
-      ROOM_HEIGHT
-    );
-    //this.mazeGenerator_ = new MazeGenerator(MAZE_WIDTH, MAZE_DEPTH);
-
-    //Generates a maze with 10x10 tile
-    this.mazeGenerator_ = new MazeGenerator(MAZE_WIDTH, MAZE_DEPTH);
   }
 
   /**
@@ -147,6 +137,17 @@ export class Main {
    * - Draws maze on minimap
    */
   async initializeScene_() {
+    this.mazeGenerator_ = new MazeGenerator(this.MAZE_WIDTH, this.MAZE_DEPTH);
+    //contains helper functions to build the scene. Pass true to enable debugging features
+    this.sceneBuilder_ = new SceneBuilder(
+      true,
+      this.worldOctree_,
+      this.scene_,
+      ROOM_SIZE,
+      ROOM_HEIGHT,
+      this.MAZE_WIDTH,
+      this.MAZE_DEPTH
+    );
     this.scene_.background = new THREE.Color(0x88ccee);
 
     // Generate maze and create rooms
@@ -154,8 +155,12 @@ export class Main {
       this.sceneBuilder_.buildMaze(this.mazeGenerator_.tiles);
     });
 
-    this.sceneBuilder_.createPlane(MAZE_WIDTH, MAZE_DEPTH, 0);
-    this.sceneBuilder_.createCeiling(MAZE_WIDTH, MAZE_DEPTH, ROOM_HEIGHT);
+    this.sceneBuilder_.createPlane(this.MAZE_WIDTH, this.MAZE_DEPTH, 0);
+    this.sceneBuilder_.createCeiling(
+      this.MAZE_WIDTH,
+      this.MAZE_DEPTH,
+      ROOM_HEIGHT
+    );
 
     //Draw the maze in the minimap
     this.playerDot_ = null;
@@ -163,32 +168,6 @@ export class Main {
     this.minimapScene_.background = null;
 
     this.mazeGenerator_.drawMaze(this.minimapScene_);
-
-    /**
-     * Testing code
-     */
-
-    this.sceneBuilder_.createMesh(
-      new THREE.BoxGeometry(4, 5, 4),
-      new THREE.MeshStandardMaterial({ color: 0x444444 }),
-      new THREE.Vector3(-2, 0, -7)
-    );
-    this.sceneBuilder_.createMesh(
-      new THREE.BoxGeometry(5, 3, 5),
-      new THREE.MeshStandardMaterial({
-        color: 0x999999,
-      }),
-      new THREE.Vector3(0, 0, 0)
-    );
-    this.sceneBuilder_.createMesh(
-      new THREE.BoxGeometry(4, 8, 4),
-      new THREE.MeshStandardMaterial({ color: 0x666666 }),
-      new THREE.Vector3(-15, 0, -18)
-    );
-
-    /**
-     * End Testing code
-     */
   }
 
   /**
@@ -210,20 +189,26 @@ export class Main {
 
     this.camera_.position.set(0, 5, 10);
     this.camera_.rotation.order = "YXZ";
+  }
 
+  initializeMinimap_() {
     //Can be used to add UI elements (such as minimap, crosshair, etc.)
     this.minimapCamera = new THREE.OrthographicCamera(
-      -MAZE_WIDTH / 2 - 1,
-      MAZE_WIDTH / 2,
-      MAZE_DEPTH / 2 + 1,
-      -MAZE_DEPTH / 2,
+      -this.MAZE_WIDTH / 2 - 1,
+      this.MAZE_WIDTH / 2,
+      this.MAZE_DEPTH / 2 + 1,
+      -this.MAZE_DEPTH / 2,
       0,
       100
     );
 
     // Position the camera above the maze, looking straight down
-    this.minimapCamera.position.set(MAZE_WIDTH / 2, 10, MAZE_DEPTH / 2);
-    this.minimapCamera.lookAt(MAZE_WIDTH / 2, 0, MAZE_DEPTH / 2);
+    this.minimapCamera.position.set(
+      this.MAZE_WIDTH / 2,
+      10,
+      this.MAZE_DEPTH / 2
+    );
+    this.minimapCamera.lookAt(this.MAZE_WIDTH / 2, 0, this.MAZE_DEPTH / 2);
   }
 
   /**
@@ -237,7 +222,7 @@ export class Main {
     // Flashlight
     this.playerlight_ = new Flashlight(this.camera_);
     this.scene_.add(this.playerlight_.light);
-    this.scene_.add(this.playerlight_.target)
+    this.scene_.add(this.playerlight_.target);
 
     // debug
     // const playerlightHelper = new THREE.PointLightHelper(this.playerlight_, 1);
@@ -262,21 +247,18 @@ export class Main {
     timer.textContent = "60s";
     document.body.appendChild(timer);
 
-    // Start the countdown timer
-    let remainingTime = TIMER;
-
     const timerElement = document.getElementById("timer");
-    timerElement.textContent = `${remainingTime}s`;
+    timerElement.textContent = `${this.remainingTime_}s`;
 
     const countdownInterval = setInterval(() => {
-      remainingTime--;
+      this.remainingTime_--;
 
-      if (remainingTime <= 0) {
+      if (this.remainingTime_ <= 0) {
         clearInterval(countdownInterval);
         timerElement.textContent = "Time's Up!";
         this.gameOver_();
       } else {
-        timerElement.textContent = `${remainingTime}s`;
+        timerElement.textContent = `${this.remainingTime_}s`;
       }
     }, 1000); // Update every second
   }
@@ -334,21 +316,31 @@ export class Main {
     this.renderer_.setSize(window.innerWidth, window.innerHeight);
   }
 
-  resetGame_() {
+  async resetGame_() {
+    this.MAZE_DEPTH += 1;
+    this.MAZE_WIDTH += 1;
     this.scene_.clear();
     this.worldOctree_.clear();
-    this.mazeGenerator_ = new MazeGenerator(MAZE_WIDTH, MAZE_DEPTH);
-    this.initializeScene_();
+
+    await this.initializeScene_();
     this.initializeLights_();
+    this.initializeMinimap_();
     this.playerController_.teleportPlayer(
       new Vector2(
         this.mazeGenerator_.start_tile.x * ROOM_SIZE,
         this.mazeGenerator_.start_tile.y * ROOM_SIZE
       )
     );
+
+    this.remainingTime_ += TIMER; // Reset the timer
+    this.showMessage("Increasing maze size, + " + TIMER + "s");
   }
 
   gameOver_() {
+    this.showMessage("Game Over!");
+  }
+
+  showMessage(message) {
     const text = document.createElement("div");
     text.id = "game-over-text";
     text.style.position = "absolute";
@@ -360,8 +352,12 @@ export class Main {
     text.style.backgroundColor = "rgba(0, 0, 0, 0.5)";
     text.style.padding = "20px";
     text.style.borderRadius = "10px";
-    text.textContent = "Game Over!";
+    text.textContent = message;
     document.body.appendChild(text);
+
+    setTimeout(() => {
+      text.remove();
+    }, 3000); // Remove the message after 3 seconds
   }
 
   /**
@@ -370,7 +366,7 @@ export class Main {
    */
   onMinimapClick_(event) {
     const rect = this.renderer_.domElement.getBoundingClientRect();
-    const minimapWidth = MINIMAP_SIZE * MAZE_RATIO;
+    const minimapWidth = MINIMAP_SIZE * (this.MAZE_WIDTH / this.MAZE_DEPTH);
     const minimapHeight = MINIMAP_SIZE;
 
     const mouseX = event.clientX - rect.left;
@@ -439,8 +435,18 @@ export class Main {
     //   window.innerHeight
     // );
 
-    this.renderer_.setViewport(0, 0, MINIMAP_SIZE * MAZE_RATIO, MINIMAP_SIZE);
-    this.renderer_.setScissor(0, 0, MINIMAP_SIZE * MAZE_RATIO, MINIMAP_SIZE);
+    this.renderer_.setViewport(
+      0,
+      0,
+      MINIMAP_SIZE * (this.MAZE_WIDTH / this.MAZE_DEPTH),
+      MINIMAP_SIZE
+    );
+    this.renderer_.setScissor(
+      0,
+      0,
+      MINIMAP_SIZE * (this.MAZE_WIDTH / this.MAZE_DEPTH),
+      MINIMAP_SIZE
+    );
     this.renderer_.setScissorTest(true);
     this.renderer_.render(this.minimapScene_, this.minimapCamera);
 

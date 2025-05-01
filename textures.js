@@ -4,8 +4,7 @@
  * - https://ambientcg.com/
  */
 
-import { normalMap, roughness } from "three/tsl";
-
+import { metalness, normalMap, roughness } from "three/tsl";
 
 const BASE_PATH = "/resources/textures";
 
@@ -59,15 +58,15 @@ export const TILES_MARBLE_BLACK = {
   normalMap: `${BASE_PATH}/TilesMarbleBlack/Tiles075_2K-PNG_NormalGL.png`,
   displacementMap: `${BASE_PATH}/TilesMarbleBlack/Tiles075_2K-PNG_Displacement.png`,
   roughnessMap: `${BASE_PATH}/TilesMarbleBlack/Tiles075_2K-PNG_Roughness.png`,
-}
+};
 
 export const MOSSY_BRICKS = {
   baseColor: `${BASE_PATH}/MossyBricks/Bricks075B_1K-PNG_Color.png`,
   normalMap: `${BASE_PATH}/MossyBricks/Bricks075B_1K-PNG_NormalGL.png`,
   displacementMap: `${BASE_PATH}/MossyBricks/Bricks075B_1K-PNG_Displacement.png`,
   roughnessMap: `${BASE_PATH}/MossyBricks/Bricks075B_1K-PNG_Roughness.png`,
-  ambientOcclusionMap: `${BASE_PATH}/MossyBricks/Bricks075B_1K-PNG_AmbientOcclusion.png`
-}
+  ambientOcclusionMap: `${BASE_PATH}/MossyBricks/Bricks075B_1K-PNG_AmbientOcclusion.png`,
+};
 /**
  * METALS
  */
@@ -76,24 +75,32 @@ export const METAL_PLATES = {
   normalMap: `${BASE_PATH}/MetalPlates/MetalPlates010_1K-PNG_NormalGL.png`,
   displacementMap: `${BASE_PATH}/MetalPlates/MetalPlates010_1K-PNG_Displacement.png`,
   roughnessMap: `${BASE_PATH}/MetalPlates/MetalPlates010_1K-PNG_Roughness.png`,
-  ambientOcclusionMap: `${BASE_PATH}/MetalPlates/MetalPlates010_1K-PNG_AmbientOcclusion.png`
-}
+  ambientOcclusionMap: `${BASE_PATH}/MetalPlates/MetalPlates010_1K-PNG_AmbientOcclusion.png`,
+};
 
 export const METAL_WALKWAY = {
   baseColor: `${BASE_PATH}/MetalWalkway/MetalWalkway005_2K-PNG_Color.png`,
   normalMap: `${BASE_PATH}/MetalWalkway/MetalWalkway005_2K-PNG_NormalGL.png`,
   displacementMap: `${BASE_PATH}/MetalWalkway/MetalWalkway005_2K-PNG_Displacement.png`,
   roughnessMap: `${BASE_PATH}/MetalWalkway/MetalWalkway005_2K-PNG_Roughness.png`,
-  ambientOcclusionMap: `${BASE_PATH}/MetalWalkway/MetalWalkway005_2K-PNG_AmbientOcclusion.png`
-}
+  ambientOcclusionMap: `${BASE_PATH}/MetalWalkway/MetalWalkway005_2K-PNG_AmbientOcclusion.png`,
+};
 
 export const CONCRETE_METAL = {
   baseColor: `${BASE_PATH}/ConcreteMetal/Concrete041C_1K-PNG_Color.png`,
   normalMap: `${BASE_PATH}/ConcreteMetal/Concrete041C_1K-PNG_NormalGL.png`,
   displacementMap: `${BASE_PATH}/ConcreteMetal/Concrete041C_1K-PNG_Displacement.png`,
   roughnessMap: `${BASE_PATH}/ConcreteMetal/Concrete041C_1K-PNG_Roughness.png`,
-  ambientOcclusionMap: `${BASE_PATH}/ConcreteMetal/Concrete041C_1K-PNG_AmbientOcclusion.png`
-}
+  ambientOcclusionMap: `${BASE_PATH}/ConcreteMetal/Concrete041C_1K-PNG_AmbientOcclusion.png`,
+  metalness: `${BASE_PATH}/ConcreteMetal/Concrete041C_1K-PNG_Metallness.png`,
+};
+
+export const METAL_PLATES_GLOSSY = {
+  baseColor: `${BASE_PATH}/MetalPlates006_1K-JPG_Color.jpg`,
+  normalMap: `${BASE_PATH}/MetalPlates006_1K-JPG_NormalGL.jpg`,
+  displacementMap: `${BASE_PATH}/MetalPlates006_1K-JPG_Displacement.jpg`,
+  roughnessMap: `${BASE_PATH}/MetalPlates006_1K-JPG_Roughness.jpg`,
+};
 
 /**
  * ELEMENTS
@@ -103,8 +110,8 @@ export const LAVA_TEXTURE = {
   normalMap: `${BASE_PATH}/Lava/Lava004_1K-PNG_NormalGL.png`,
   displacementMap: `${BASE_PATH}/Lava/Lava004_1K-PNG_Displacement.png`,
   roughnessMap: `${BASE_PATH}/Lava/Lava004_1K-PNG_Roughness.png`,
-  emissionMap: `${BASE_PATH}/Lava/Lava004_1K-PNG_Emission.png` ,
-}
+  emissionMap: `${BASE_PATH}/Lava/Lava004_1K-PNG_Emission.png`,
+};
 /**
  *  emissive: 0xff4500,
     emissiveMap: emissionMap,

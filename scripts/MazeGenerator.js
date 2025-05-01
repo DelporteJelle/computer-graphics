@@ -16,8 +16,8 @@ export default class MazeGenerator {
       }
     }
 
-    this.start_tile = this.tiles[Math.floor(width / 2)][Math.floor(depth / 2)];
-    // this.start_tile = this.tiles[0][0];
+    // this.start_tile = this.tiles[Math.floor(width / 2)][Math.floor(depth / 2)];
+    this.start_tile = this.tiles[0][0];
     this.stack.push(this.start_tile);
     this.start_tile.start = true;
     this.start_tile.distance_to_start = 0;

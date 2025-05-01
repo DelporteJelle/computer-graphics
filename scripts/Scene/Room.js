@@ -32,13 +32,13 @@ export function createRoom(
   position.multiply(offset);
 
   const textureLoader = new THREE.TextureLoader();
-  const configureTexture = (path, repeatX=1, repeatY=1) => {
+  const configureTexture = (path, repeatX = 1, repeatY = 1) => {
     return textureLoader.load(path, (texture) => {
       texture.wrapS = THREE.RepeatWrapping;
       texture.wrapT = THREE.RepeatWrapping;
       texture.repeat.set(repeatX, repeatY);
     });
-  }
+  };
   const texture = CONCRETE_METAL;
   // const wallTexture = textureLoader.load(QUAKE.wallTiles, (texture) => {
   //   texture.wrapS = THREE.RepeatWrapping;
@@ -46,20 +46,10 @@ export function createRoom(
   //   texture.repeat.set(3, 3);
   // });
   const baseColor = configureTexture(texture.baseColor);
-  const normal = configureTexture(texture.normalMap);
-  const roughness = configureTexture(texture.roughnessMap);
-  const displacementMap = configureTexture(texture.displacementMap);
 
   // Updated wall material with mappings, these are computationally expensive so I turned them off for now
   const wallMaterial = new THREE.MeshStandardMaterial({
-    color: 0xdddddd,
     map: baseColor, // Base color texture
-    normalMap: normal, // Normal map for surface details
-    roughnessMap: roughness, // Roughness map for surface reflectivity
-    roughness: 1, // Base roughness value
-    // displacementMap: displacementMap,
-    // displacementScale: 0.3,
-    metalness: 0, // Non-metallic surface
   });
 
   const createMesh = (geometry, position, material) => {

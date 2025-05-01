@@ -19,8 +19,6 @@ import { color, roughness } from "three/tsl";
 import {
   WALL_DEPTH,
   STEPS_PER_FRAME,
-  MAZE_WIDTH,
-  MAZE_DEPTH,
   ROOM_SIZE,
   ROOM_HEIGHT,
   GRAVITY,
@@ -32,7 +30,7 @@ import {
 /**
  * Textures
  */
-import { ICE_TEXTURE, TILES_CERAMIC_WHITE } from "../textures";
+import { METAL_PLATES_GLOSSY } from "../textures";
 
 /**
  * Components
@@ -42,7 +40,15 @@ import { createPlane } from "./Scene/Plane";
 import createCeiling from "./Scene/Ceiling";
 
 export default class SceneBuilder {
-  constructor(debugging = false, octree, scene, ROOM_SIZE, ROOM_HEIGHT) {
+  constructor(
+    debugging = false,
+    octree,
+    scene,
+    ROOM_SIZE,
+    ROOM_HEIGHT,
+    MAZE_WIDTH,
+    MAZE_DEPTH
+  ) {
     this.ROOM_HEIGHT = ROOM_HEIGHT;
     this.ROOM_SIZE = ROOM_SIZE;
     this.WALL_DEPTH = WALL_DEPTH;
@@ -50,6 +56,8 @@ export default class SceneBuilder {
     this.loader_ = new GLTFLoader().setPath("/resources/");
     this.worldOctree_ = octree;
     this.scene_ = scene;
+    this.MAZE_WIDTH = MAZE_WIDTH;
+    this.MAZE_DEPTH = MAZE_DEPTH;
   }
 
   /**
@@ -137,13 +145,13 @@ export default class SceneBuilder {
    * @param {*} tiles
    */
   buildMaze(tiles) {
-    for (let i = 0; i < MAZE_WIDTH; i++) {
-      for (let j = 0; j < MAZE_DEPTH; j++) {
+    for (let i = 0; i < this.MAZE_WIDTH; i++) {
+      for (let j = 0; j < this.MAZE_DEPTH; j++) {
         let tile = tiles[i][j];
         createRoom(this.scene_, this.worldOctree_, new THREE.Vector3(i, 0, j), {
           N: tile.N,
-          E: i == MAZE_WIDTH - 1 ? true : false, //Only place East wall if it's the last tile in the row
-          S: j == MAZE_DEPTH - 1 ? true : false, //Only place South wall if it's the last tile in the column
+          E: i == this.MAZE_WIDTH - 1 ? true : false, //Only place East wall if it's the last tile in the row
+          S: j == this.MAZE_DEPTH - 1 ? true : false, //Only place South wall if it's the last tile in the column
           W: tile.W,
           start: tile.start,
           end: tile.end,
@@ -166,5 +174,47 @@ export default class SceneBuilder {
       depth,
       height,
     });
+  }
+
+  createPowerUp() {
+    const texture = METAL_PLATES_GLOSSY;
+
+    const baseColor = configureTexture(texture.baseColor);
+    const normal = configureTexture(texture.normalMap);
+    const roughness = configureTexture(texture.roughnessMap);
+    const displacementMap = configureTexture(texture.displacementMap);
+
+    const sphereGeometry = new THREE.SphereGeometry(1, 32, 32); // Radius 1, 32 segments
+    const sphereMaterial = new THREE.MeshStandardMaterial({
+      map: baseColor,
+      normalMap: normal,
+      roughnessMap: roughness,
+      displacementMap: displacementMap,
+      displacementScale: 0.1, // Adjust for subtle displacement
+      roughness: 0.5,
+      metalness: 1.0, // Make it metallic for a shiny look
+    });
+
+    // Create the sphere mesh
+    const sphere = new THREE.Mesh(sphereGeometry, sphereMaterial);
+    sphere.position.set(5, 2, 5); // Position the sphere above the floor
+    sphere.castShadow = true; // Enable shadow casting
+    sphere.receiveShadow = false; // Sphere doesn't need to receive shadows
+    this.scene_.add(sphere);
+
+    // // Create a reflective floor
+    // const floorGeometry = new THREE.PlaneGeometry(10, 10); // Floor size
+    // const floorMaterial = new THREE.MeshStandardMaterial({
+    //   color: 0x222222,
+    //   metalness: 0.8,
+    //   roughness: 0.2,
+    //   envMapIntensity: 1.0, // Enhance reflections
+    // });
+
+    // const floor = new THREE.Mesh(floorGeometry, floorMaterial);
+    // floor.rotation.x = -Math.PI / 2; // Rotate to lie flat
+    // floor.position.set(0, 0, 0); // Position at ground level
+    // floor.receiveShadow = true; // Enable shadow receiving
+    // this.scene_.add(floor);
   }
 }

@@ -67,11 +67,11 @@ export function createPlane(scene_, octree_, { width, depth, height }) {
     normalMap: normalMap,
     normalScale: new THREE.Vector2(1, -1),
     displacementMap: displacementMap,
-    displacementScale: 0.2,
-    roughnessMap: roughnessMap,
-    roughness: 0.5,
-    aoMap: ambientOcclusionMap,
-    aoMapIntensity: 1,
+    displacementScale: 0.3,
+    // roughnessMap: roughnessMap, //I turned roughness off because it has little visual impact
+    // roughness: 0.5,
+    // aoMap: ambientOcclusionMap, //I turned ao off because it has little visual impact
+    // aoMapIntensity: 1,
     metalness: 0.3,
   });
   const visualPlane = new THREE.Mesh(visualPlaneGeometry, visualPlaneMaterial);

@@ -8,9 +8,8 @@ export const TIMER = 60; // in seconds
 /**
  * Maze Modifiers
  */
-export const MAZE_WIDTH = 10;
-export const MAZE_DEPTH = 10;
-export const MAZE_RATIO = MAZE_WIDTH / MAZE_DEPTH;
+export const STARTER_MAZE_WIDTH = 5;
+export const STARTER_MAZE_DEPTH = 5;
 // export const ROOM_SIZE = 0.6;
 // export const ROOM_HEIGHT = 0.1;
 export const ROOM_SIZE = 15;

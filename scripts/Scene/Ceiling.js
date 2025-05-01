@@ -2,7 +2,11 @@ import * as THREE from "https://cdn.skypack.dev/three@0.136";
 import * as Config from "../../config";
 import { SLATE_FLOOR_TILE, METAL_WALKWAY } from "../../textures";
 
-export default function createCeiling(scene_, octree_, { width, depth, height })  {
+export default function createCeiling(
+  scene_,
+  octree_,
+  { width, depth, height }
+) {
   const textureLoader = new THREE.TextureLoader();
   const texture = METAL_WALKWAY;
 
@@ -22,7 +26,8 @@ export default function createCeiling(scene_, octree_, { width, depth, height })
       texture.wrapS = THREE.RepeatWrapping;
       texture.wrapT = THREE.RepeatWrapping;
       texture.repeat.set(width, depth);
-  });
+    }
+  );
   const roughnessMap = textureLoader.load(texture.roughnessMap, (texture) => {
     texture.wrapS = THREE.RepeatWrapping;
     texture.wrapT = THREE.RepeatWrapping;
@@ -57,8 +62,8 @@ export default function createCeiling(scene_, octree_, { width, depth, height })
   const visualCeilingMaterial = new THREE.MeshStandardMaterial({
     color: 0x666666,
     map: ceilingTexture,
-    normalMap: normalMap,
-    normalScale: new THREE.Vector2(1, -1),
+    // normalMap: normalMap, //Turned off because it has little visual impact
+    // normalScale: new THREE.Vector2(1, -1),
     displacementMap: displacementMap,
     displacementScale: 0.7,
     roughnessMap: roughnessMap,
@@ -68,7 +73,7 @@ export default function createCeiling(scene_, octree_, { width, depth, height })
   });
 
   const visualCeiling = new THREE.Mesh(
-    visualCeilingGeometry, 
+    visualCeilingGeometry,
     visualCeilingMaterial
   );
 
@@ -85,19 +90,19 @@ export default function createCeiling(scene_, octree_, { width, depth, height })
   const collisionCeilingGeometry = new THREE.PlaneGeometry(
     total_width,
     total_depth,
-    1, 1
+    1,
+    1
   );
 
   const collisionCeilingMaterial = new THREE.MeshBasicMaterial({
     visible: false,
-  }); 
-  
+  });
+
   // Invisible collision plane
   const collisionCeiling = new THREE.Mesh(
     collisionCeilingGeometry,
     collisionCeilingMaterial
   );
-
 
   collisionCeiling.rotation.x = -Math.PI / 2;
   collisionCeiling.position.set(position.x, position.y, position.z);
