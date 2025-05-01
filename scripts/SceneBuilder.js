@@ -44,6 +44,7 @@ import {
 import { createRoom } from "./Scene/Room";
 import { createPlane } from "./Scene/Plane";
 import createCeiling from "./Scene/Ceiling";
+import Room from "./Scene/Room2";
 
 export default class SceneBuilder {
   constructor(
@@ -154,14 +155,17 @@ export default class SceneBuilder {
     for (let i = 0; i < this.MAZE_WIDTH; i++) {
       for (let j = 0; j < this.MAZE_DEPTH; j++) {
         let tile = tiles[i][j];
-        createRoom(this.scene_, this.worldOctree_, new THREE.Vector3(i, 0, j), {
-          N: tile.N,
-          E: i == this.MAZE_WIDTH - 1 ? true : false, //Only place East wall if it's the last tile in the row
-          S: j == this.MAZE_DEPTH - 1 ? true : false, //Only place South wall if it's the last tile in the column
-          W: tile.W,
-          start: tile.start,
-          end: tile.end,
-        });
+        // createRoom(this.scene_, this.worldOctree_, new THREE.Vector3(i, 0, j), {
+        //   N: tile.N,
+        //   E: i == this.MAZE_WIDTH - 1 ? true : false, //Only place East wall if it's the last tile in the row
+        //   S: j == this.MAZE_DEPTH - 1 ? true : false, //Only place South wall if it's the last tile in the column
+        //   W: tile.W,
+        //   start: tile.start,
+        //   end: tile.end,
+        // });
+        const room = new Room(tile);
+        room.vMeshes.forEach((mesh) => this.scene_.add(mesh)); // Add to scene
+        room.cMeshes.forEach((mesh) => this.worldOctree_.fromGraphNode(mesh)); // Add to octree)
       }
     }
   }

@@ -3,13 +3,15 @@ import { RectAreaLightHelper } from "three/addons/helpers/RectAreaLightHelper.js
 
 import { ROOM_SIZE, ROOM_HEIGHT, WALL_DEPTH } from "../../config";
 import { QUAKE, SLATE_FLOOR_TILE } from "../../textures";
+import * as RR from "./Rooms/RoomResources";
 
 
 export default class Room {
   constructor(tile) {
-    this.position = null;
+    this.position = new THREE.Vector3(tile.x, 0, tile.y);
     this.tile = tile;
-    this.meshes = [];
+    this.visualMeshes_ = []
+    this.collisionMeshes_ = [];
 
     this.light = null;
     this.lightEnabled = false;
@@ -17,63 +19,38 @@ export default class Room {
     this.initialize();
   }
 
+  get vMeshes() { return this.visualMeshes_; }
+  get cMeshes() { return this.collisionMeshes_; }
+
   initialize() {
-    this.position = new THREE.Vector3(
-      this.tile.x * ROOM_SIZE, 
-      0, 
-      this.tile.y * ROOM_HEIGHT
-    )
+    const offset = new THREE.Vector3(ROOM_SIZE, 0, ROOM_SIZE);
+    this.position = this.position.multiply(offset);
 
-    
-
+    this.buildWalls();
+    this.buildLight();
+    this.buildFloor();
   }
 
-  createMaterial
-
+  /**
+   * BUILDER METHODS
+   */
   buildWalls() {
-    [this.tile.N, this.tile.E, this.tile.S, this.tile.W].forEach((wall) => {
-      
-    })
-  if (N)
-    createMesh(
-      new THREE.BoxGeometry(ROOM_SIZE, ROOM_HEIGHT, WALL_DEPTH, 10, 10, 10),
-      new THREE.Vector3(
-        position.x,
-        ROOM_HEIGHT / 2,
-        position.z - ROOM_SIZE / 2
-      ),
-      wallMaterial
-    );
-  if (S)
-    createMesh(
-      new THREE.BoxGeometry(ROOM_SIZE, ROOM_HEIGHT, WALL_DEPTH),
-      new THREE.Vector3(
-        position.x,
-        ROOM_HEIGHT / 2,
-        position.z + ROOM_SIZE / 2
-      ),
-      wallMaterial
-    );
-  if (W)
-    createMesh(
-      new THREE.BoxGeometry(WALL_DEPTH, ROOM_HEIGHT, ROOM_SIZE),
-      new THREE.Vector3(
-        position.x - ROOM_SIZE / 2,
-        ROOM_HEIGHT / 2,
-        position.z
-      ),
-      wallMaterial
-    );
-  if (E)
-    createMesh(
-      new THREE.BoxGeometry(WALL_DEPTH, ROOM_HEIGHT, ROOM_SIZE),
-      new THREE.Vector3(
-        position.x + ROOM_SIZE / 2,
-        ROOM_HEIGHT / 2,
-        position.z
-      ),
-      wallMaterial
-    );
+    [this.tile.N, this.tile.E, this.tile.S, this.tile.W].forEach((wall, index) => {
+      if (wall) {
+        const mesh = new THREE.Mesh(
+          index%2 === 0 ? RR.H_WALL : RR.V_WALL, 
+          RR.WALL_MATERIAL
+        );
+        mesh.position.copy(
+          this.getWallPosition_(index)
+        ); // Use copy, not set
+        mesh.castShadow = true;
+        mesh.receiveShadow = true;
+
+        this.visualMeshes_.push(mesh);
+        this.collisionMeshes_.push(mesh)
+      }
+    });
   }
 
   buildLight() {
@@ -97,18 +74,78 @@ export default class Room {
 
     this.light.visible = false;
     this.lightEnabled = false;
+    this.visualMeshes_.push(this.light)
   }
 
-  toggleLight() {
-    if (this.lightEnabled) {
-      this.light.visible = false;
-      this.lightEnabled = false;
+  buildFloor() {
+    const floorPosition = new THREE.Vector3(
+      this.position.x,
+      -1,
+      this.position.z,  
+    );
+
+    if (this.tile.start || this.tile.end) {
+      const color = this.tile.start ? 0x00ff00 : 0xff0000;
+      const floor = new THREE.Mesh(
+        RR.ROOM_FLOOR_VISUAL,
+        new THREE.MeshStandardMaterial({ color })
+      );
+
+      floor.position.copy(floorPosition);
+      this.visualMeshes_.push(floor);
+      this.collisionMeshes_.push(floor);
       return;
     }
 
-    this.light.visible = true;
-    this.lightEnabled = true;
+    // Visual
+    const visualFloor = new THREE.Mesh(
+      RR.ROOM_FLOOR_VISUAL,
+      RR.FLOOR_MATERIAL_VISUAL
+    );
+    visualFloor.receiveShadow = true;
+    visualFloor.position.copy(floorPosition);
+    this.visualMeshes_.push(visualFloor);
+
+    // Collision
+    const collisionFloor = new THREE.Mesh(
+      RR.ROOM_FLOOR_COLLISION,
+      RR.INVISIBLE_MATERIAL
+    )
+    collisionFloor.position.copy(floorPosition);
+    this.collisionMeshes_.push(collisionFloor);
   }
 
-
+  /**
+   * HELPER METHODS
+   */
+  getWallPosition_(direction) {
+    switch (direction) {
+      case 0: // N
+        return new THREE.Vector3(
+          this.position.x,
+          ROOM_HEIGHT / 2,
+          this.position.z - ROOM_SIZE / 2
+        );
+      case 1: // E
+        return new THREE.Vector3(
+          this.position.x + ROOM_SIZE / 2,
+          ROOM_HEIGHT / 2,
+          this.position.z
+        );
+      case 2: // S
+        return new THREE.Vector3(
+          this.position.x,
+          ROOM_HEIGHT / 2,
+          this.position.z + ROOM_SIZE / 2
+        );
+      case 3: // W
+        return new THREE.Vector3(
+          this.position.x - ROOM_SIZE / 2,
+          ROOM_HEIGHT / 2,
+          this.position.z
+        );
+      default:
+          return new THREE.Vector3(0, 0, 0);
+    }
+  }
 }

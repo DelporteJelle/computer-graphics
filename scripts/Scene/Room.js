@@ -31,27 +31,6 @@ export function createRoom(
   const offset = new THREE.Vector3(ROOM_SIZE, 0, ROOM_SIZE);
   position.multiply(offset);
 
-  const textureLoader = new THREE.TextureLoader();
-  const configureTexture = (path, repeatX = 1, repeatY = 1) => {
-    return textureLoader.load(path, (texture) => {
-      texture.wrapS = THREE.RepeatWrapping;
-      texture.wrapT = THREE.RepeatWrapping;
-      texture.repeat.set(repeatX, repeatY);
-    });
-  };
-  const texture = CONCRETE_METAL;
-  // const wallTexture = textureLoader.load(QUAKE.wallTiles, (texture) => {
-  //   texture.wrapS = THREE.RepeatWrapping;
-  //   texture.wrapT = THREE.RepeatWrapping;
-  //   texture.repeat.set(3, 3);
-  // });
-  const baseColor = configureTexture(texture.baseColor);
-
-  // Updated wall material with mappings, these are computationally expensive so I turned them off for now
-  const wallMaterial = new THREE.MeshStandardMaterial({
-    map: baseColor, // Base color texture
-  });
-
   const createMesh = (geometry, position, material) => {
     const mesh = new THREE.Mesh(geometry, material);
     mesh.position.copy(position); // Use copy, not set
@@ -64,7 +43,7 @@ export function createRoom(
   // Walls
   if (N)
     createMesh(
-      new THREE.BoxGeometry(ROOM_SIZE, ROOM_HEIGHT, WALL_DEPTH),
+      HWall,
       new THREE.Vector3(
         position.x,
         ROOM_HEIGHT / 2,
@@ -74,7 +53,7 @@ export function createRoom(
     );
   if (S)
     createMesh(
-      new THREE.BoxGeometry(ROOM_SIZE, ROOM_HEIGHT, WALL_DEPTH),
+      HWall,
       new THREE.Vector3(
         position.x,
         ROOM_HEIGHT / 2,
@@ -84,7 +63,7 @@ export function createRoom(
     );
   if (W)
     createMesh(
-      new THREE.BoxGeometry(WALL_DEPTH, ROOM_HEIGHT, ROOM_SIZE),
+      VWall,
       new THREE.Vector3(
         position.x - ROOM_SIZE / 2,
         ROOM_HEIGHT / 2,
@@ -94,7 +73,7 @@ export function createRoom(
     );
   if (E)
     createMesh(
-      new THREE.BoxGeometry(WALL_DEPTH, ROOM_HEIGHT, ROOM_SIZE),
+      VWall,
       new THREE.Vector3(
         position.x + ROOM_SIZE / 2,
         ROOM_HEIGHT / 2,

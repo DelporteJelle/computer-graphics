@@ -155,7 +155,7 @@ export class Main {
       this.sceneBuilder_.buildMaze(this.mazeGenerator_.tiles);
     });
 
-    this.sceneBuilder_.createPlane(this.MAZE_WIDTH, this.MAZE_DEPTH, 0);
+    //this.sceneBuilder_.createPlane(this.MAZE_WIDTH, this.MAZE_DEPTH, 0);
     this.sceneBuilder_.createCeiling(
       this.MAZE_WIDTH,
       this.MAZE_DEPTH,
