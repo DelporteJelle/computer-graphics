@@ -67,6 +67,21 @@ export const MOSSY_BRICKS = {
   roughnessMap: `${BASE_PATH}/MossyBricks/Bricks075B_1K-PNG_Roughness.png`,
   ambientOcclusionMap: `${BASE_PATH}/MossyBricks/Bricks075B_1K-PNG_AmbientOcclusion.png`,
 };
+
+export const ONYX_013 = {
+  baseColor: `${BASE_PATH}/Onyx013/Onyx013_1K-JPG_Color.jpg`,
+  normalMap: `${BASE_PATH}/Onyx013/Onyx013_1K-JPG_NormalGL.jpg`,
+  displacementMap: `${BASE_PATH}/Onyx013/Onyx013_1K-JPG_Displacement.jpg`,
+  roughnessMap: `${BASE_PATH}/Onyx013/Onyx013_1K-JPG_Roughness.jpg`,
+};
+
+export const MARBLE_006 = {
+  baseColor: `${BASE_PATH}/Marble006/Marble006_1K-JPG_Color.jpg`,
+  normalMap: `${BASE_PATH}/Marble006/Marble006_1K-JPG_NormalGL.jpg`,
+  displacementMap: `${BASE_PATH}/Marble006/Marble006_1K-JPG_Displacement.jpg`,
+  roughnessMap: `${BASE_PATH}/Marble006/Marble006_1K-JPG_Roughness.jpg`,
+};
+
 /**
  * METALS
  */
@@ -96,10 +111,27 @@ export const CONCRETE_METAL = {
 };
 
 export const METAL_PLATES_GLOSSY = {
-  baseColor: `${BASE_PATH}/MetalPlates006_1K-JPG_Color.jpg`,
-  normalMap: `${BASE_PATH}/MetalPlates006_1K-JPG_NormalGL.jpg`,
-  displacementMap: `${BASE_PATH}/MetalPlates006_1K-JPG_Displacement.jpg`,
-  roughnessMap: `${BASE_PATH}/MetalPlates006_1K-JPG_Roughness.jpg`,
+  baseColor: `${BASE_PATH}/MetalPlates_Glossy/MetalPlates006_1K-JPG_Color.jpg`,
+  normalMap: `${BASE_PATH}/MetalPlates_Glossy/MetalPlates006_1K-JPG_NormalGL.jpg`,
+  displacementMap: `${BASE_PATH}/MetalPlates_Glossy/MetalPlates006_1K-JPG_Displacement.jpg`,
+  roughnessMap: `${BASE_PATH}/MetalPlates_Glossy/MetalPlates006_1K-JPG_Roughness.jpg`,
+  metalness: `${BASE_PATH}/MetalPlates_Glossy/MetalPlates006_1K-JPG_Metalness.jpg`,
+};
+
+export const METAL_030 = {
+  baseColor: `${BASE_PATH}/Metal030/Metal030_1K-JPG_Color.jpg`,
+  normalMap: `${BASE_PATH}/Metal030/Metal030_1K-JPG_NormalGL.jpg`,
+  displacementMap: `${BASE_PATH}/Metal030/Metal030_1K-JPG_Displacement.jpg`,
+  roughnessMap: `${BASE_PATH}/Metal030/Metal030_1K-JPG_Roughness.jpg`,
+  metalness: `${BASE_PATH}/Metal030/Metal030_1K-JPG_Metalness.jpg`,
+};
+
+export const METAL_012 = {
+  baseColor: `${BASE_PATH}/Metal012/Metal012_1K-JPG_Color.jpg`,
+  normalMap: `${BASE_PATH}/Metal012/Metal012_1K-JPG_NormalGL.jpg`,
+  displacementMap: `${BASE_PATH}/Metal012/Metal012_1K-JPG_Displacement.jpg`,
+  roughnessMap: `${BASE_PATH}/Metal012/Metal012_1K-JPG_Roughness.jpg`,
+  metalness: `${BASE_PATH}/Metal012/Metal012_1K-JPG_Metalness.jpg`,
 };
 
 /**

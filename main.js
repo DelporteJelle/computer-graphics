@@ -168,6 +168,8 @@ export class Main {
     this.minimapScene_.background = null;
 
     this.mazeGenerator_.drawMaze(this.minimapScene_);
+
+    this.sceneBuilder_.createPowerUp();
   }
 
   /**

@@ -11,7 +11,7 @@ import {
 } from "three";
 import * as THREE from "https://cdn.skypack.dev/three@0.136";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
-import { color, roughness } from "three/tsl";
+import { color, emissive, roughness } from "three/tsl";
 
 /**
  * Config
@@ -30,7 +30,13 @@ import {
 /**
  * Textures
  */
-import { METAL_PLATES_GLOSSY } from "../textures";
+import {
+  MARBLE_006,
+  METAL_012,
+  METAL_030,
+  METAL_PLATES_GLOSSY,
+  ONYX_013,
+} from "../textures";
 
 /**
  * Components
@@ -177,30 +183,68 @@ export default class SceneBuilder {
   }
 
   createPowerUp() {
-    const texture = METAL_PLATES_GLOSSY;
+    const textureLoader = new THREE.TextureLoader();
+
+    const configureTexture = (path, repeatX = 1, repeatY = 1) => {
+      return textureLoader.load(path, (texture) => {
+        texture.wrapS = THREE.RepeatWrapping;
+        texture.wrapT = THREE.RepeatWrapping;
+        texture.repeat.set(repeatX, repeatY);
+      });
+    };
+
+    const texture = MARBLE_006;
 
     const baseColor = configureTexture(texture.baseColor);
     const normal = configureTexture(texture.normalMap);
     const roughness = configureTexture(texture.roughnessMap);
     const displacementMap = configureTexture(texture.displacementMap);
+    // const metalness = configureTexture(texture.metalness);
 
     const sphereGeometry = new THREE.SphereGeometry(1, 32, 32); // Radius 1, 32 segments
     const sphereMaterial = new THREE.MeshStandardMaterial({
       map: baseColor,
       normalMap: normal,
       roughnessMap: roughness,
-      displacementMap: displacementMap,
-      displacementScale: 0.1, // Adjust for subtle displacement
-      roughness: 0.5,
-      metalness: 1.0, // Make it metallic for a shiny look
+      roughness: 1,
+      // displacementMap: displacementMap,
+      // displacementScale: 0.05, // Adjust for subtle displacement
+      // metalnessMap: metalness,
+      emissive: 0xff00ff, // Green emissive color
+      emissiveIntensity: 0.2, // Adjust intensity
     });
 
     // Create the sphere mesh
     const sphere = new THREE.Mesh(sphereGeometry, sphereMaterial);
-    sphere.position.set(5, 2, 5); // Position the sphere above the floor
+    sphere.position.set(0, 1, -3); // Position the sphere above the floor
     sphere.castShadow = true; // Enable shadow casting
     sphere.receiveShadow = false; // Sphere doesn't need to receive shadows
     this.scene_.add(sphere);
+
+    const pointLight = new THREE.PointLight(0xff00ff, 0.5, 5); // Orange light, intensity 1, range 10
+    pointLight.position.set(0, 1, -3); // Same position as the sphere
+    pointLight.castShadow = true; // Enable shadows for the light
+    this.scene_.add(pointLight);
+
+    let time = 0;
+
+    // Add animation to make the ball move up and down and spin
+    const animate = () => {
+      time += 0.01; // Increment time for smooth animation
+
+      // Make the sphere move up and down
+      sphere.position.y = 1 + Math.sin(time * 2) * 0.5; // Oscillate between 0.5 and 1.5
+
+      // Make the sphere spin slowly
+      sphere.rotation.y += 0.01; // Rotate around the Y-axis
+      sphere.rotation.x += 0.005; // Rotate around the X-axis
+
+      // Ensure the animation loop continues
+      requestAnimationFrame(animate);
+    };
+
+    // Start the animation
+    animate();
 
     // // Create a reflective floor
     // const floorGeometry = new THREE.PlaneGeometry(10, 10); // Floor size

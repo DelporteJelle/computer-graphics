@@ -3,7 +3,7 @@ import * as THREE from "https://cdn.skypack.dev/three@0.136";
 import { ROOM_SIZE } from "../../config";
 import { METAL_PLATES } from "../../textures";
 import { ao } from "three/examples/jsm/tsl/display/GTAONode.js";
-import { metalness } from "three/tsl";
+import { metalness, roughness } from "three/tsl";
 
 /**
  * Creates a plane with given params
@@ -72,7 +72,9 @@ export function createPlane(scene_, octree_, { width, depth, height }) {
     // roughness: 0.5,
     // aoMap: ambientOcclusionMap, //I turned ao off because it has little visual impact
     // aoMapIntensity: 1,
-    metalness: 0.3,
+    metalness: 0.5,
+    roughness: 0.5,
+    // envMapIntensity: 1,
   });
   const visualPlane = new THREE.Mesh(visualPlaneGeometry, visualPlaneMaterial);
   visualPlane.rotation.x = -Math.PI / 2;
