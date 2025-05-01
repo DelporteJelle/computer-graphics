@@ -15,6 +15,8 @@ export default class Room {
 
     this.light = null;
     this.lightEnabled = false;
+    
+    this.hasParkour = Math.random() < 0.25;
 
     this.initialize();
   }
@@ -74,6 +76,9 @@ export default class Room {
 
     this.light.visible = false;
     this.lightEnabled = false;
+
+    this.target_ = new THREE.Object3D();
+    this.light.target = this.target_;
     this.visualMeshes_.push(this.light)
   }
 
@@ -94,6 +99,24 @@ export default class Room {
       floor.position.copy(floorPosition);
       this.visualMeshes_.push(floor);
       this.collisionMeshes_.push(floor);
+      return;
+    }
+
+    if (this.hasParkour) {
+      const visualFloor = new THREE.Mesh(
+        RR.LAVA_FLOOR,
+        RR.LAVA_MATERIAL
+      );
+      visualFloor.receiveShadow = true;
+      visualFloor.position.copy(floorPosition);
+      this.visualMeshes_.push(visualFloor);
+
+      const collisionFloor = new THREE.Mesh(
+        RR.LAVA_FLOOR,
+        RR.INVISIBLE_MATERIAL
+      )
+      collisionFloor.position.copy(floorPosition);
+      this.collisionMeshes_.push(collisionFloor);
       return;
     }
 
