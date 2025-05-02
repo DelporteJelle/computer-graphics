@@ -29,16 +29,18 @@ export default class Flashlight {
 
   get light() { return this.light_ }
   get target() { return this.target_ }
+  get isOn() { return this.enabled; }
 
-  toggleLight() {
-    if (this.enabled) {
-      this.light_.visible = false;
-      this.enabled = false;
-      return
-    }
-
+  enableLight() {
     this.light_.visible = true;
     this.enabled = true;
+    console.log(`Flashlight enabled`);
+  }
+
+  disableLight() {
+    this.light_.visible = false;
+    this.enabled = false;
+    console.log(`Flashlight disabled`);
   }
 
   update() {

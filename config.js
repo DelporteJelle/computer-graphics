@@ -4,14 +4,13 @@
 export const STEPS_PER_FRAME = 5;
 export const CAMERA_ANGLE_CAP = Math.PI / 2.3;
 export const TIMER = 60; // in seconds
+export const ANIMATIONS_ENABLED = true;
 
 /**
  * Maze Modifiers
  */
 export const STARTER_MAZE_WIDTH = 5;
 export const STARTER_MAZE_DEPTH = 5;
-// export const ROOM_SIZE = 0.6;
-// export const ROOM_HEIGHT = 0.1;
 export const ROOM_SIZE = 15;
 export const ROOM_HEIGHT = 10;
 export const WALL_DEPTH = 0.2;
@@ -39,3 +38,4 @@ export const KEY_LEFT = "KeyA";
 export const KEY_RIGHT = "KeyD";
 export const KEY_JUMP = "Space";
 export const KEY_TOGGLE_FLASHLIGHT = "KeyT";
+export const KEY_RESET = "KeyP"

@@ -16,6 +16,7 @@ import SceneBuilder from "./scripts/SceneBuilder";
 import PlayerController from "./scripts/Player/PlayerController";
 import MazeGenerator from "./scripts/MazeGenerator";
 import KeyEvents from "./scripts/KeyEvents";
+import getGameState from "./scripts/GameState";
 import { ICE_TEXTURE, TILES_CERAMIC_WHITE } from "./textures";
 
 /**
@@ -63,6 +64,7 @@ export class Main {
     this.mazeGenerator_ = null;
     this.MAZE_WIDTH = STARTER_MAZE_WIDTH; // Width of the maze in tiles
     this.MAZE_DEPTH = STARTER_MAZE_DEPTH; // Depth of the maze in tiles
+    this.gameState_ = getGameState(this.resetGame_);
     this.remainingTime_ = TIMER; // Timer for the game
     this.powerupLocations = []; //Powerup locations
 
@@ -77,7 +79,7 @@ export class Main {
     this.initializeLights_(); //Initializes the lights
     this.initializeCamera_(); //Initializes playerController and camera
     this.initializeMinimap_(); //Initializes the minimap
-    this.initializeTimer_(); //Initializes the timer
+    //this.initializeTimer_(); //Initializes the timer
 
     document.body.appendChild(this.stats_.domElement);
 
@@ -94,11 +96,11 @@ export class Main {
       this.onMinimapClick_(event);
     });
 
-    window.addEventListener("keydown", (event) => {
-      if (event.key === "p") {
-        this.resetGame_();
-      }
-    });
+    // window.addEventListener("keydown", (event) => {
+    //   if (event.key === "p") {
+    //     this.resetGame_();
+    //   }
+    // });
   }
 
   /**
@@ -137,18 +139,15 @@ export class Main {
    * - Builds maze room
    * - Draws maze on minimap
    */
-  async initializeScene_() {
+  initializeScene_() {
     this.mazeGenerator_ = new MazeGenerator(this.MAZE_WIDTH, this.MAZE_DEPTH);
     //contains helper functions to build the scene. Pass true to enable debugging features
     this.sceneBuilder_ = new SceneBuilder(
       true,
       this.worldOctree_,
       this.scene_,
-      ROOM_SIZE,
-      ROOM_HEIGHT,
       this.MAZE_WIDTH,
       this.MAZE_DEPTH,
-      this.powerupLocations
     );
     this.scene_.background = new THREE.Color(0x88ccee);
 
@@ -159,21 +158,14 @@ export class Main {
 
     //this.sceneBuilder_.createPlane(this.MAZE_WIDTH, this.MAZE_DEPTH, 0);
     this.sceneBuilder_.createCeiling(
-      this.MAZE_WIDTH,
-      this.MAZE_DEPTH,
-      ROOM_HEIGHT
+      this.MAZE_WIDTH, this.MAZE_DEPTH, ROOM_HEIGHT
     );
 
     //Draw the maze in the minimap
     this.playerDot_ = null;
     this.minimapScene_ = new THREE.Scene();
     this.minimapScene_.background = null;
-
     this.mazeGenerator_.drawMaze(this.minimapScene_);
-
-    // for (let i = 0; i < 12; i++) {
-    //   this.sceneBuilder_.createPowerUp(i, 1.5, i);
-    // }
   }
 
   /**
@@ -191,8 +183,6 @@ export class Main {
       this.camera_,
       spawnpoint,
       this.playerlight_,
-      this.powerupLocations,
-      this.showMessage.bind(this) // Pass the showMessage function as a callback
     );
 
     this.camera_.position.set(0, 5, 10);
@@ -238,44 +228,9 @@ export class Main {
   }
 
   /**
-   *
-   */
-  initializeTimer_() {
-    const timer = document.createElement("div");
-    timer.id = "timer";
-    timer.style.position = "absolute";
-    timer.style.top = "10px";
-    timer.style.right = "10px";
-    timer.style.color = "white";
-    timer.style.fontSize = "24px";
-    timer.style.fontFamily = "Arial, sans-serif";
-    timer.style.backgroundColor = "rgba(0, 0, 0, 0.5)";
-    timer.style.padding = "10px";
-    timer.style.borderRadius = "5px";
-    timer.textContent = "60s";
-    document.body.appendChild(timer);
-
-    const timerElement = document.getElementById("timer");
-    timerElement.textContent = `${this.remainingTime_}s`;
-
-    const countdownInterval = setInterval(() => {
-      this.remainingTime_--;
-
-      if (this.remainingTime_ <= 0) {
-        clearInterval(countdownInterval);
-        timerElement.textContent = "Time's Up!";
-        this.gameOver_();
-      } else {
-        timerElement.textContent = `${this.remainingTime_}s`;
-      }
-    }, 1000); // Update every second
-  }
-
-  /**
    * Handle player location change
    * - Updates player dot on minimap
    * - Updates shortest path
-   * TODO: Turn on light in rooms when player enters
    */
   handlePlayerLocationChange_() {
     if (!this.playerDot_) {
@@ -304,7 +259,7 @@ export class Main {
 
       //Reset the maze if the player is on the end tile
       if (this.playerTile_.end) {
-        this.resetGame_();
+        this.gameState_.reset();
       }
     }
   }
@@ -324,49 +279,22 @@ export class Main {
     this.renderer_.setSize(window.innerWidth, window.innerHeight);
   }
 
-  async resetGame_() {
+  resetGame_ = () => {
     this.MAZE_DEPTH += 1;
     this.MAZE_WIDTH += 1;
     this.scene_.clear();
     this.worldOctree_.clear();
-    this.powerupLocations = []; //Reset powerup locations
 
-    await this.initializeScene_();
+    this.initializeScene_();
     this.initializeLights_();
     this.initializeMinimap_();
+    this.gameState_.setSpawnpoint(new Vector2(
+      this.mazeGenerator_.start_tile.x * ROOM_SIZE,
+      this.mazeGenerator_.start_tile.y * ROOM_SIZE
+    ));
     this.playerController_.teleportPlayer(
-      new Vector2(
-        this.mazeGenerator_.start_tile.x * ROOM_SIZE,
-        this.mazeGenerator_.start_tile.y * ROOM_SIZE
-      )
+      this.gameState_.spawnpoint
     );
-
-    this.remainingTime_ += TIMER; // Reset the timer
-    this.showMessage("Increasing maze size, + " + TIMER + "s");
-  }
-
-  gameOver_() {
-    this.showMessage("Game Over!");
-  }
-
-  showMessage(message) {
-    const text = document.createElement("div");
-    text.id = "game-over-text";
-    text.style.position = "absolute";
-    text.style.top = "50%";
-    text.style.left = "50%";
-    text.style.transform = "translate(-50%, -50%)";
-    text.style.color = "white";
-    text.style.fontSize = "48px";
-    text.style.backgroundColor = "rgba(0, 0, 0, 0.5)";
-    text.style.padding = "20px";
-    text.style.borderRadius = "10px";
-    text.textContent = message;
-    document.body.appendChild(text);
-
-    setTimeout(() => {
-      text.remove();
-    }, 3000); // Remove the message after 3 seconds
   }
 
   /**

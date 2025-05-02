@@ -4,6 +4,7 @@
 import * as THREE from "https://cdn.skypack.dev/three@0.136";
 import { Capsule } from "three/addons/math/Capsule.js";
 import KeyEvents from "../KeyEvents";
+import getGameState from "../GameState";
 
 /**
  * Config
@@ -23,11 +24,10 @@ export default class PlayerController {
     this.camera_ = camera;
     this.flashlight_ = flashlight;
     this.isPointerLocked = false;
+    this.gameState_ = getGameState();
     this.hasDoubleJump = true;
     this.jump_bonus = 0;
     this.speed_bonus = 0;
-    this.powerupLocations_ = powerupLocations;
-    this.showMessageCallback_ = showMessageCallback; // Store the callback
 
     this.playerCollider_ = new Capsule(
       new THREE.Vector3(spawnpoint.x, 1, spawnpoint.y), //Start point of collision box
@@ -106,32 +106,27 @@ export default class PlayerController {
    */
   checkPlayerProximity(playerPosition) {
     // Create a copy of the powerup locations to avoid modifying the array while iterating
-    const powerupsToRemove = [];
 
-    this.powerupLocations_.forEach((sphere) => {
-      const spherePosition = new THREE.Vector3(sphere.x, sphere.y, sphere.z);
-      const distance = playerPosition.distanceTo(spherePosition);
+    this.gameState_.powerupLocations.forEach((sphere) => {
+      const distance = playerPosition.distanceTo(sphere);
 
       if (distance < 0.7) {
         console.log("Powerup collected!");
 
         if (Math.random() < 0.5) {
           this.jump_bonus += 0.5;
-          this.showMessageCallback_("Jump increased!");
+          this.gameState_.showMessage("Jump increased!");
         } else {
           this.speed_bonus += 0.5;
-          this.showMessageCallback_("Speed increased!");
+          this.gameState_.showMessage("Speed increased!");
         }
 
-        powerupsToRemove.push(sphere);
+        // remove collected powerup
+        this.gameState_.removePowerup(sphere);
       }
     });
-
-    // Remove collected powerups after iteration
-    this.powerupLocations_ = this.powerupLocations_.filter(
-      (sphere) => !powerupsToRemove.includes(sphere)
-    );
   }
+
   updatePlayer(deltaTime) {
     if (!this.playerOnFloor_) {
       this.playerVelocity_.y -= Config.GRAVITY * deltaTime; // Apply gravity to the y velocity
@@ -227,7 +222,15 @@ export default class PlayerController {
     }
 
     if (KeyEvents.getKeyPressed(Config.KEY_TOGGLE_FLASHLIGHT)) {
-      this.flashlight_.toggleLight();
+      if (this.flashlight_.isOn) {
+        this.flashlight_.disableLight();
+        return;
+      }
+      this.flashlight_.enableLight();
+    }
+
+    if (KeyEvents.getKeyPressed(Config.KEY_RESET)) {
+      this.gameState_.reset();
     }
   }
 

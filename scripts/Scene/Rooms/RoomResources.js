@@ -1,16 +1,21 @@
-import * as THREE from "three";
+import * as THREE from "https://cdn.skypack.dev/three@0.136";
+import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import { ROOM_SIZE, ROOM_HEIGHT, WALL_DEPTH } from "../../../config";
 import { CONCRETE_METAL, LAVA_TEXTURE, METAL_PLATES } from "../../../textures";
 
 /**
  * =======================
  *      ROOM RESOURCES
- * ======================
+ * =======================
  * All rooms use the same textures and geometries, reusing them saves memory
  */
 
+// Clock for animations
+export const TEXTURE_CLOCK = new THREE.Clock();
 /**
+ * =======================
  * GEOMETRIES
+ * =======================
  */
 export const H_WALL = new THREE.BoxGeometry(ROOM_SIZE, ROOM_HEIGHT+2, WALL_DEPTH);
 export const V_WALL = new THREE.BoxGeometry(WALL_DEPTH, ROOM_HEIGHT+2, ROOM_SIZE);
@@ -22,7 +27,9 @@ export const ROOM_FLOOR_COLLISION = new THREE.BoxGeometry(ROOM_SIZE, 2, ROOM_SIZ
 export const LAVA_FLOOR = new THREE.BoxGeometry(ROOM_SIZE, 1, ROOM_SIZE);
 
 /**
+ * =======================
  * TEXTURES
+ * =======================
  */
 const textureLoader = new THREE.TextureLoader();
 const getTexture = (path, { repeatX=1, repeatY=1, encoding=THREE.LinearEncoding } = {}) => {

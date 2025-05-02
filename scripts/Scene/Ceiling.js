@@ -3,44 +3,21 @@ import * as Config from "../../config";
 import { SLATE_FLOOR_TILE, METAL_WALKWAY } from "../../textures";
 
 export default function createCeiling(
-  scene_,
-  octree_,
-  { width, depth, height }
+  width, 
+  depth, 
+  height
 ) {
-  const textureLoader = new THREE.TextureLoader();
   const texture = METAL_WALKWAY;
-
-  const ceilingTexture = textureLoader.load(texture.baseColor, (texture) => {
-    texture.wrapS = THREE.RepeatWrapping;
-    texture.wrapT = THREE.RepeatWrapping;
-    texture.repeat.set(width, depth);
-  });
-  const normalMap = textureLoader.load(texture.normalMap, (texture) => {
-    texture.wrapS = THREE.RepeatWrapping;
-    texture.wrapT = THREE.RepeatWrapping;
-    texture.repeat.set(width, depth);
-  });
-  const displacementMap = textureLoader.load(
-    texture.displacementMap,
-    (texture) => {
+  const textureLoader = new THREE.TextureLoader();
+  const getTexture = (path, { repeatX=1, repeatY=1, encoding=THREE.LinearEncoding } = {}) => {
+    const texture = textureLoader.load(path, (texture) => {
       texture.wrapS = THREE.RepeatWrapping;
       texture.wrapT = THREE.RepeatWrapping;
-      texture.repeat.set(width, depth);
-    }
-  );
-  const roughnessMap = textureLoader.load(texture.roughnessMap, (texture) => {
-    texture.wrapS = THREE.RepeatWrapping;
-    texture.wrapT = THREE.RepeatWrapping;
-    texture.repeat.set(width, depth);
-  });
-  const ambientOcclusionMap = textureLoader.load(
-    texture.ambienOcclusionMap,
-    (texture) => {
-      texture.wrapS = THREE.RepeatWrapping;
-      texture.wrapT = THREE.RepeatWrapping;
-      texture.repeat.set(width, depth);
-    }
-  );
+      texture.repeat.set(repeatX, repeatY);
+    });
+    texture.encoding = encoding;
+    return texture;
+  };
 
   const total_width = width * Config.ROOM_SIZE;
   const total_depth = depth * Config.ROOM_SIZE;
@@ -61,12 +38,12 @@ export default function createCeiling(
   );
   const sharedCeilingMaterial = new THREE.MeshStandardMaterial({
     color: 0x666666,
-    map: ceilingTexture,
-    displacementMap: displacementMap,
+    map: getTexture(texture.baseColor, { repeatX: width, repeatY: depth, encoding: THREE.sRGBEncoding }),
+    displacementMap: getTexture(texture.displacementMap, { repeatX: width, repeatY: depth }),
     displacementScale: 0.7,
-    roughnessMap: roughnessMap,
+    roughnessMap: getTexture(texture.roughnessMap, { repeatX: width, repeatY: depth }),
     roughness: 0.5,
-    aoMap: ambientOcclusionMap,
+    aoMap: getTexture(texture.ambientOcclusionMap, { repeatX: width, repeatY: depth }),
     aoMapIntensity: 1,
   });
 
@@ -78,9 +55,6 @@ export default function createCeiling(
   visualCeiling.receiveShadow = true;
   visualCeiling.rotation.x = Math.PI / 2;
   visualCeiling.position.set(position.x, position.y, position.z);
-
-  // Add visual plane to the scene (not the octree)
-  scene_.add(visualCeiling);
 
   /**
    * OCTREE
@@ -105,6 +79,8 @@ export default function createCeiling(
   collisionCeiling.rotation.x = -Math.PI / 2;
   collisionCeiling.position.set(position.x, position.y, position.z);
 
-  // Add collision plane to the octree
-  octree_.fromGraphNode(collisionCeiling);
+  return {
+    visualCeiling: visualCeiling,
+    collisionCeiling: collisionCeiling
+  };
 }
