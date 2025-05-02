@@ -13,11 +13,12 @@ export default class MazeGenerator {
       for (let j = 0; j < depth; j++) {
         let tile = new Tile(i, j);
         this.tiles[i][j] = tile;
+        if (Math.random() <= 0.1) tile.hasPowerup = true; // Randomly assign powerups to tiles
       }
     }
 
-    // this.start_tile = this.tiles[Math.floor(width / 2)][Math.floor(depth / 2)];
-    this.start_tile = this.tiles[0][0];
+    this.start_tile = this.tiles[Math.floor(width / 2)][Math.floor(depth / 2)];
+    // this.start_tile = this.tiles[0][0];
     this.stack.push(this.start_tile);
     this.start_tile.start = true;
     this.start_tile.distance_to_start = 0;
@@ -357,5 +358,6 @@ export class Tile {
     this.playerLoc = false; //True if player is standing on this tile
     this.playerDest = false; //True if the player has set a destination on this tile
     this.pathToDest = false; //All tiles that are part of the path to the destination tile
+    this.hasPowerup = false; //True if the tile has a powerup
   }
 }

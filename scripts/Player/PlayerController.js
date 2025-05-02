@@ -11,12 +11,23 @@ import KeyEvents from "../KeyEvents";
 import * as Config from "../../config";
 
 export default class PlayerController {
-  constructor(octree, camera, spawnpoint, flashlight) {
+  constructor(
+    octree,
+    camera,
+    spawnpoint,
+    flashlight,
+    powerupLocations,
+    showMessageCallback
+  ) {
     this.worldOctree_ = octree;
     this.camera_ = camera;
     this.flashlight_ = flashlight;
     this.isPointerLocked = false;
     this.hasDoubleJump = true;
+    this.jump_bonus = 0;
+    this.speed_bonus = 0;
+    this.powerupLocations_ = powerupLocations;
+    this.showMessageCallback_ = showMessageCallback; // Store the callback
 
     this.playerCollider_ = new Capsule(
       new THREE.Vector3(spawnpoint.x, 1, spawnpoint.y), //Start point of collision box
@@ -72,7 +83,6 @@ export default class PlayerController {
     this.playerOnFloor_ = false;
 
     if (result) {
-      //If the y value of the normal is greater than 0, the player is on the floor
       this.playerOnFloor_ = result.normal.y > 0;
 
       if (!this.playerOnFloor_) {
@@ -80,7 +90,6 @@ export default class PlayerController {
           result.normal,
           -result.normal.dot(this.playerVelocity_)
         );
-      } else {
       }
 
       if (result.depth >= 1e-10) {
@@ -91,6 +100,38 @@ export default class PlayerController {
     }
   }
 
+  /**
+   * Checks if the player is near a sphere and grants a powerup if so
+   * @param {*} playerPosition
+   */
+  checkPlayerProximity(playerPosition) {
+    // Create a copy of the powerup locations to avoid modifying the array while iterating
+    const powerupsToRemove = [];
+
+    this.powerupLocations_.forEach((sphere) => {
+      const spherePosition = new THREE.Vector3(sphere.x, sphere.y, sphere.z);
+      const distance = playerPosition.distanceTo(spherePosition);
+
+      if (distance < 0.7) {
+        console.log("Powerup collected!");
+
+        if (Math.random() < 0.5) {
+          this.jump_bonus += 0.5;
+          this.showMessageCallback_("Jump increased!");
+        } else {
+          this.speed_bonus += 0.5;
+          this.showMessageCallback_("Speed increased!");
+        }
+
+        powerupsToRemove.push(sphere);
+      }
+    });
+
+    // Remove collected powerups after iteration
+    this.powerupLocations_ = this.powerupLocations_.filter(
+      (sphere) => !powerupsToRemove.includes(sphere)
+    );
+  }
   updatePlayer(deltaTime) {
     if (!this.playerOnFloor_) {
       this.playerVelocity_.y -= Config.GRAVITY * deltaTime; // Apply gravity to the y velocity
@@ -105,8 +146,8 @@ export default class PlayerController {
     const horizontalSpeed = Math.sqrt(
       this.playerVelocity_.x ** 2 + this.playerVelocity_.z ** 2
     );
-    if (horizontalSpeed > Config.MAX_SPEED) {
-      const scale = Config.MAX_SPEED / horizontalSpeed;
+    if (horizontalSpeed > Config.MAX_SPEED + this.speed_bonus) {
+      const scale = (Config.MAX_SPEED + this.speed_bonus) / horizontalSpeed;
       this.playerVelocity_.x *= scale;
       this.playerVelocity_.z *= scale;
     }
@@ -119,6 +160,7 @@ export default class PlayerController {
 
     // Handle collisions and update the camera position
     this.playerCollisions();
+    this.checkPlayerProximity(this.playerCollider_.end);
     this.camera_.position.copy(this.playerCollider_.end);
   }
 
@@ -170,13 +212,13 @@ export default class PlayerController {
         currentTime - this.lastJumpTime > Config.JUMP_COOLDOWN
       ) {
         if (this.playerOnFloor_) {
-          this.playerVelocity_.y = Config.JUMP_FORCE;
+          this.playerVelocity_.y = Config.JUMP_FORCE + this.jump_bonus;
           this.hasDoubleJump = true;
           this.lastJumpTime = currentTime;
         } else if (this.hasDoubleJump) {
           this.playerVelocity_.y = Math.max(
-            this.playerVelocity_.y + Config.JUMP_FORCE,
-            Config.JUMP_FORCE
+            this.playerVelocity_.y + Config.JUMP_FORCE + this.jump_bonus,
+            Config.JUMP_FORCE + this.jump_bonus
           );
           this.hasDoubleJump = false;
           this.lastJumpTime = currentTime;
@@ -187,12 +229,6 @@ export default class PlayerController {
     if (KeyEvents.getKeyPressed(Config.KEY_TOGGLE_FLASHLIGHT)) {
       this.flashlight_.toggleLight();
     }
-
-    // if (this.playerOnFloor_) {
-    //   if (this.keyStates_["Space"]) {
-    //     this.playerVelocity_.y = this.JUMP_FORCE;
-    //   }
-    // }
   }
 
   teleportPlayerIfOob() {

@@ -61,22 +61,19 @@ export function createPlane(scene_, octree_, { width, depth, height }) {
     total_width * 5, //Subdivisions to make displacement map work
     total_depth * 5
   );
-  const visualPlaneMaterial = new THREE.MeshStandardMaterial({
+
+  const sharedPlaneMaterial = new THREE.MeshStandardMaterial({
     color: 0x666666,
     map: planeTexture,
     normalMap: normalMap,
     normalScale: new THREE.Vector2(1, -1),
     displacementMap: displacementMap,
     displacementScale: 0.3,
-    // roughnessMap: roughnessMap, //I turned roughness off because it has little visual impact
-    // roughness: 0.5,
-    // aoMap: ambientOcclusionMap, //I turned ao off because it has little visual impact
-    // aoMapIntensity: 1,
     metalness: 0.5,
     roughness: 0.5,
-    // envMapIntensity: 1,
   });
-  const visualPlane = new THREE.Mesh(visualPlaneGeometry, visualPlaneMaterial);
+
+  const visualPlane = new THREE.Mesh(visualPlaneGeometry, sharedPlaneMaterial);
   visualPlane.rotation.x = -Math.PI / 2;
   visualPlane.receiveShadow = true;
   visualPlane.position.set(position.x, position.y, position.z);

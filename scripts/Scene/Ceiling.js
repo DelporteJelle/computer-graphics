@@ -59,11 +59,9 @@ export default function createCeiling(
     total_width * 5,
     total_depth * 5
   );
-  const visualCeilingMaterial = new THREE.MeshStandardMaterial({
+  const sharedCeilingMaterial = new THREE.MeshStandardMaterial({
     color: 0x666666,
     map: ceilingTexture,
-    // normalMap: normalMap, //Turned off because it has little visual impact
-    // normalScale: new THREE.Vector2(1, -1),
     displacementMap: displacementMap,
     displacementScale: 0.7,
     roughnessMap: roughnessMap,
@@ -74,7 +72,7 @@ export default function createCeiling(
 
   const visualCeiling = new THREE.Mesh(
     visualCeilingGeometry,
-    visualCeilingMaterial
+    sharedCeilingMaterial
   );
 
   visualCeiling.receiveShadow = true;

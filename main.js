@@ -64,6 +64,7 @@ export class Main {
     this.MAZE_WIDTH = STARTER_MAZE_WIDTH; // Width of the maze in tiles
     this.MAZE_DEPTH = STARTER_MAZE_DEPTH; // Depth of the maze in tiles
     this.remainingTime_ = TIMER; // Timer for the game
+    this.powerupLocations = []; //Powerup locations
 
     this.initialize_();
   }
@@ -146,7 +147,8 @@ export class Main {
       ROOM_SIZE,
       ROOM_HEIGHT,
       this.MAZE_WIDTH,
-      this.MAZE_DEPTH
+      this.MAZE_DEPTH,
+      this.powerupLocations
     );
     this.scene_.background = new THREE.Color(0x88ccee);
 
@@ -169,7 +171,9 @@ export class Main {
 
     this.mazeGenerator_.drawMaze(this.minimapScene_);
 
-    this.sceneBuilder_.createPowerUp();
+    // for (let i = 0; i < 12; i++) {
+    //   this.sceneBuilder_.createPowerUp(i, 1.5, i);
+    // }
   }
 
   /**
@@ -186,7 +190,9 @@ export class Main {
       this.worldOctree_,
       this.camera_,
       spawnpoint,
-      this.playerlight_
+      this.playerlight_,
+      this.powerupLocations,
+      this.showMessage.bind(this) // Pass the showMessage function as a callback
     );
 
     this.camera_.position.set(0, 5, 10);
@@ -323,6 +329,7 @@ export class Main {
     this.MAZE_WIDTH += 1;
     this.scene_.clear();
     this.worldOctree_.clear();
+    this.powerupLocations = []; //Reset powerup locations
 
     await this.initializeScene_();
     this.initializeLights_();

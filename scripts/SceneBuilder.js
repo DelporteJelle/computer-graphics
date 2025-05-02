@@ -54,7 +54,8 @@ export default class SceneBuilder {
     ROOM_SIZE,
     ROOM_HEIGHT,
     MAZE_WIDTH,
-    MAZE_DEPTH
+    MAZE_DEPTH,
+    powerupLocations
   ) {
     this.ROOM_HEIGHT = ROOM_HEIGHT;
     this.ROOM_SIZE = ROOM_SIZE;
@@ -65,6 +66,54 @@ export default class SceneBuilder {
     this.scene_ = scene;
     this.MAZE_WIDTH = MAZE_WIDTH;
     this.MAZE_DEPTH = MAZE_DEPTH;
+    this.powerupLocations_ = powerupLocations;
+    this.powerupTextures_ = this.loadPowerupTextures();
+    this.sharedPowerupMaterial_ = this.createSharedPowerupMaterial();
+  }
+
+  loadPowerupTextures() {
+    const textureLoader = new THREE.TextureLoader();
+
+    const configureTexture = (path, repeatX = 1, repeatY = 1) => {
+      return textureLoader.load(path, (texture) => {
+        texture.wrapS = THREE.RepeatWrapping;
+        texture.wrapT = THREE.RepeatWrapping;
+        texture.repeat.set(repeatX, repeatY);
+      });
+    };
+
+    const texture = MARBLE_006;
+
+    return {
+      baseColor: configureTexture(texture.baseColor),
+      normal: configureTexture(texture.normalMap),
+      roughness: configureTexture(texture.roughnessMap),
+      displacement: configureTexture(texture.displacementMap),
+    };
+  }
+
+  createSharedPowerupMaterial() {
+    const textureLoader = new THREE.TextureLoader();
+
+    const configureTexture = (path) => {
+      const texture = textureLoader.load(path);
+      texture.wrapS = THREE.RepeatWrapping;
+      texture.wrapT = THREE.RepeatWrapping;
+      return texture;
+    };
+
+    const baseColor = configureTexture(MARBLE_006.baseColor);
+    const normalMap = configureTexture(MARBLE_006.normalMap);
+    const roughnessMap = configureTexture(MARBLE_006.roughnessMap);
+
+    return new THREE.MeshStandardMaterial({
+      map: baseColor,
+      normalMap: normalMap,
+      roughnessMap: roughnessMap,
+      roughness: 1,
+      emissive: 0xff00ff,
+      emissiveIntensity: 0.2,
+    });
   }
 
   /**
@@ -164,6 +213,9 @@ export default class SceneBuilder {
         //   end: tile.end,
         // });
         const room = new Room(tile);
+        if (tile.hasPowerup) {
+          this.createPowerUp(tile.x * ROOM_SIZE, 2, tile.y * ROOM_SIZE);
+        }
         room.vMeshes.forEach((mesh) => this.scene_.add(mesh)); // Add to scene
         room.cMeshes.forEach((mesh) => this.worldOctree_.fromGraphNode(mesh)); // Add to octree)
       }
@@ -186,83 +238,40 @@ export default class SceneBuilder {
     });
   }
 
-  createPowerUp() {
-    const textureLoader = new THREE.TextureLoader();
-
-    const configureTexture = (path, repeatX = 1, repeatY = 1) => {
-      return textureLoader.load(path, (texture) => {
-        texture.wrapS = THREE.RepeatWrapping;
-        texture.wrapT = THREE.RepeatWrapping;
-        texture.repeat.set(repeatX, repeatY);
-      });
-    };
-
-    const texture = MARBLE_006;
-
-    const baseColor = configureTexture(texture.baseColor);
-    const normal = configureTexture(texture.normalMap);
-    const roughness = configureTexture(texture.roughnessMap);
-    const displacementMap = configureTexture(texture.displacementMap);
-    // const metalness = configureTexture(texture.metalness);
+  /**
+   * Spawns a powerup at the given position
+   * @param {Vector3} pos
+   * @param {string} type // Type of powerup (e.g., "speed", "jump", "time")
+   */
+  createPowerUp(x, y, z) {
+    this.powerupLocations_.push(new THREE.Vector3(x, y, z));
 
     const sphereGeometry = new THREE.SphereGeometry(1, 32, 32); // Radius 1, 32 segments
-    const sphereMaterial = new THREE.MeshStandardMaterial({
-      map: baseColor,
-      normalMap: normal,
-      roughnessMap: roughness,
-      roughness: 1,
-      // displacementMap: displacementMap,
-      // displacementScale: 0.05, // Adjust for subtle displacement
-      // metalnessMap: metalness,
-      emissive: 0xff00ff, // Green emissive color
-      emissiveIntensity: 0.2, // Adjust intensity
-    });
 
-    // Create the sphere mesh
-    const sphere = new THREE.Mesh(sphereGeometry, sphereMaterial);
-    sphere.position.set(0, 1, -3); // Position the sphere above the floor
-    sphere.castShadow = true; // Enable shadow casting
-    sphere.receiveShadow = false; // Sphere doesn't need to receive shadows
+    const sphere = new THREE.Mesh(sphereGeometry, this.sharedPowerupMaterial_);
+    sphere.position.set(x, y, z);
+    sphere.castShadow = true;
+    sphere.receiveShadow = false;
     this.scene_.add(sphere);
 
-    const pointLight = new THREE.PointLight(0xff00ff, 0.5, 5); // Orange light, intensity 1, range 10
-    pointLight.position.set(0, 1, -3); // Same position as the sphere
-    pointLight.castShadow = true; // Enable shadows for the light
+    const pointLight = new THREE.PointLight(0xff00ff, 0.5, 5);
+    pointLight.position.set(x, y, z);
+    pointLight.castShadow = false; // Disable shadows to reduce texture unit usage
     this.scene_.add(pointLight);
 
     let time = 0;
 
-    // Add animation to make the ball move up and down and spin
+    // Adds an animation to make the ball move up and down and spin
     const animate = () => {
-      time += 0.01; // Increment time for smooth animation
+      time += 0.01;
 
-      // Make the sphere move up and down
-      sphere.position.y = 1 + Math.sin(time * 2) * 0.5; // Oscillate between 0.5 and 1.5
+      sphere.position.y = 1 + Math.sin(time * 2) * 0.5;
+      sphere.rotation.y += 0.01;
+      sphere.rotation.x += 0.005;
 
-      // Make the sphere spin slowly
-      sphere.rotation.y += 0.01; // Rotate around the Y-axis
-      sphere.rotation.x += 0.005; // Rotate around the X-axis
-
-      // Ensure the animation loop continues
       requestAnimationFrame(animate);
     };
 
-    // Start the animation
     animate();
-
-    // // Create a reflective floor
-    // const floorGeometry = new THREE.PlaneGeometry(10, 10); // Floor size
-    // const floorMaterial = new THREE.MeshStandardMaterial({
-    //   color: 0x222222,
-    //   metalness: 0.8,
-    //   roughness: 0.2,
-    //   envMapIntensity: 1.0, // Enhance reflections
-    // });
-
-    // const floor = new THREE.Mesh(floorGeometry, floorMaterial);
-    // floor.rotation.x = -Math.PI / 2; // Rotate to lie flat
-    // floor.position.set(0, 0, 0); // Position at ground level
-    // floor.receiveShadow = true; // Enable shadow receiving
-    // this.scene_.add(floor);
   }
 }
