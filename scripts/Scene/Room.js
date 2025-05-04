@@ -6,6 +6,7 @@ import { ANIMATIONS_ENABLED } from "../../config";
 import * as RR from "./RoomResources";
 import * as PU from "./Powerup";
 import loadStartEndPreset from "./RoomTypes/StartEnd";
+import loadParkourPreset1 from "./RoomTypes/ParkourPreset1";
 
 export default class Room {
   constructor(tile, sceneBuilder) {
@@ -53,7 +54,7 @@ export default class Room {
     this.buildFloor();
     this.buildObjects();
     this.buildLight();
-    if (this.tile.hasPowerup)
+    if (this.tile.hasPowerup && !(this.tile.start || this.tile.end))
       this.setPowerUp(new THREE.Vector3(
         this.position.x,
         2, 
@@ -231,7 +232,9 @@ export default class Room {
     }
     if (this.hasParkour) 
     {
-      //const meshes = getRandomParkourPreset(position);
+      const meshes = loadParkourPreset1(this.position);
+      this.visualMeshes_.push(...meshes.visual);
+      this.collisionMeshes_.push(...meshes.collision)
     }
   }
 

@@ -27,7 +27,7 @@ export const ROOM_FLOOR_VISUAL = new THREE.BoxGeometry(
 export const ROOM_FLOOR_COLLISION = new THREE.BoxGeometry(ROOM_SIZE, 2, ROOM_SIZE);
 export const LAVA_FLOOR = new THREE.BoxGeometry(ROOM_SIZE, 1, ROOM_SIZE);
 
-const platformSize = ROOM_SIZE / 5
+const platformSize = ROOM_SIZE / 8
 export const ROUND_PLATFORM = new THREE.CylinderGeometry(platformSize, platformSize * 0.8, 2, 32);
 export const SQUARE_PLATFORM = null;
 export const NARROW_PLATFORM = null
