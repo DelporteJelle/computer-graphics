@@ -48,18 +48,21 @@ export default class SceneBuilder {
    * @param {THREE.Vector3} rotation
    */
   load_glb_object(
-    path,
-    position,
-    spherical = false,
-    rotation = new THREE.Vector3(0, 0, 0)
+    path, position, {
+      spherical=false,
+      rotation=new THREE.Euler(0, 0, 0, 'XYZ'),
+      scale=new THREE.Vector3(1, 1, 1),
+      shadows=true,
+    } = {}
   ) {
     this.loader_.load(path, (gltf) => {
-      const object = gltf.scene;
-      this.scene_.add(object);
-      object.position.set(position.x, position.y, position.z);
-      object.rotation.set(rotation.x, rotation.y, rotation.z);
+      const group = gltf.scene;
+      group.position.copy(position);
+      group.rotation.set(rotation.x, rotation.y, rotation.z);
+      group.scale.copy(scale);
+      this.scene_.add(group);
 
-      const boundingBox = new Box3().setFromObject(object);
+      const boundingBox = new Box3().setFromObject(group);
       const size = boundingBox.getSize(new THREE.Vector3());
       const center = boundingBox.getCenter(new THREE.Vector3());
 
@@ -91,8 +94,8 @@ export default class SceneBuilder {
 
       this.worldOctree_.fromGraphNode(boundingMesh);
 
-      object.traverse((child) => {
-        if (child.isMesh) {
+      group.traverse((child) => {
+        if (child.isMesh && shadows) {
           child.castShadow = true;
           child.receiveShadow = true;
         }
@@ -126,6 +129,8 @@ export default class SceneBuilder {
         const room = new Room(tile, this);
         room.vMeshes.forEach((mesh) => this.scene_.add(mesh)); // Add to scene
         room.cMeshes.forEach((mesh) => this.worldOctree_.fromGraphNode(mesh)); // Add to octree
+        if (room.light) this.scene_.add(room.light);
+        if (room.target) this.scene_.add(room.target);
       }
     }
   }

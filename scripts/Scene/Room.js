@@ -1,12 +1,11 @@
 import * as THREE from "https://cdn.skypack.dev/three@0.136";
-import { RectAreaLightHelper } from "three/addons/helpers/RectAreaLightHelper.js";
 import getGameState from "../GameState";
-import { ROOM_SIZE, ROOM_HEIGHT, WALL_DEPTH } from "../../config";
-import { QUAKE, SLATE_FLOOR_TILE } from "../../textures";
+import { ROOM_SIZE, ROOM_HEIGHT, ROOM_LIGHTS_ENABLED } from "../../config";
 
 import { ANIMATIONS_ENABLED } from "../../config";
-import * as RR from "./Rooms/RoomResources";
+import * as RR from "./RoomResources";
 import * as PU from "./Powerup";
+import loadStartEndPreset from "./RoomTypes/StartEnd";
 
 export default class Room {
   constructor(tile, sceneBuilder) {
@@ -18,8 +17,8 @@ export default class Room {
     this.visualMeshes_ = []
     this.collisionMeshes_ = [];
 
-    this.light = null;
-    this.lightEnabled = false;
+    this.light_ = null;
+    this.target_ = null;
     
     if (this.tile.start || this.tile.end) {
       this.hasLantern = this.hasParkour = false;
@@ -38,15 +37,22 @@ export default class Room {
     return this.collisionMeshes_;
   }
 
+  get light() {
+    return this.light_;
+  }
+
+  get target() {
+    return this.target_;
+  }
+
   initialize() {
     const offset = new THREE.Vector3(ROOM_SIZE, 0, ROOM_SIZE);
     this.position = this.position.multiply(offset);
 
     this.buildWalls();
     this.buildFloor();
-    if (this.hasLantern)
-      this.buildLight();
-    if (this.hasParkour) {}
+    this.buildObjects();
+    this.buildLight();
     if (this.tile.hasPowerup)
       this.setPowerUp(new THREE.Vector3(
         this.position.x,
@@ -57,7 +63,13 @@ export default class Room {
   }
 
   /**
+   * =======================
    * BUILDER METHODS
+   * =======================
+   */
+
+  /**
+   * Builds walls (North, East, Sout, West)
    */
   buildWalls() {
     [this.tile.N, this.tile.E, this.tile.S, this.tile.W].forEach(
@@ -78,45 +90,67 @@ export default class Room {
     );
   }
 
+  /**
+   * Builds light source (only if this.hasLantern)
+   */
   buildLight() {
-    this.light = new THREE.SpotLight(this.tile.start ? 0xe5f6df : 0xff0000);
-    this.light.position.set(this.position.x, ROOM_HEIGHT, this.position.z);
-    this.light = new THREE.SpotLight(
-      this.tile.start ? 0xe5f6df : 0xff0000
-    );
-    this.light.position.set(
-      this.position.x,
-      ROOM_HEIGHT -3,
-      this.position.z
-    );
+    if (this.tile.start || this.tile.end) {
+      this.light_ = new THREE.SpotLight(
+        0xffffc5, 20, ROOM_HEIGHT * 2, Math.PI / 5, 0.3, 2
+      );
+      // Spotlight
+      this.light_.position.set(
+        this.position.x, ROOM_HEIGHT - 1, this.position.z
+      );
 
-    this.light.castShadow = true;
-    this.light.shadow.mapSize.width = 1024;
-    this.light.shadow.mapSize.height = 1024;
-    this.light.shadow.camera.near = 500;
-    this.light.shadow.camera.far = 4000;
-    this.light.shadow.camera.fov = 30;
+      this.light_.castShadow = true;
+      this.light_.shadow.mapSize.width = 256;
+      this.light_.shadow.mapSize.height = 256;
+      this.light_.shadow.radius = 2;
+      this.light_.shadow.bias = -0.006;
 
-    this.light.visible = true;
-    this.lightEnabled = false;
+      // Target
+      this.target_ = new THREE.Object3D();
+      this.target_.position.set(
+        this.position.x, 0, this.position.z
+      );
+      this.light_.target = this.target_;
 
-    this.target_ = new THREE.Object3D();
-    this.light.target = this.target_;
-    this.light.target.position.set(
-      this.position.x,
-      this.position.y - 10, // move it down along Y axis
-      this.position.z
-    );
-    
-    this.visualMeshes_.push(this.light)
-    this.visualMeshes_.push(this.light.target)
+      // debugging
+      // const helper = new THREE.SpotLightHelper(this.light_); 
+      // this.visualMeshes_.push(helper)
+      return;
+    }
 
-    this.sceneBuilder_.load_glb_object(
-      'glb/fixated_construction_spotlight.glb',
-      this.getLampPosition_()
-    )
+    if (ROOM_LIGHTS_ENABLED && this.hasLantern) {
+      this.light_ = new THREE.PointLight(
+        0xffffff, 5, ROOM_SIZE*2, 2                 
+      );
+      this.light_.position.copy(this.getLampPosition_());
+      this.light_.castShadow = true;
+      // Low shadow mapSize to reduce lag
+      this.light_.shadow.mapSize.width = 128;
+      this.light_.shadow.mapSize.height = 128;
+      this.light_.shadow.radius = 2;
+      this.light_.shadow.bias = -0.006;
+      this.light_.visible = true;
+  
+      // Load lamp model
+      this.sceneBuilder_.load_glb_object(
+        'glb/tripod_light_model_1.glb',
+        this.getLampPosition_(),
+        {
+          scale: new THREE.Vector3(3, 3, 3),
+          shadows: false,
+        }
+      );
+      return;
+    }
   }
 
+  /**
+   * Build floor base on room type
+   */
   buildFloor() {
     const floorPosition = new THREE.Vector3(
       this.position.x,
@@ -124,12 +158,13 @@ export default class Room {
       this.position.z
     );
 
+    // START / END
     if (this.tile.start || this.tile.end) {
-      const color = this.tile.start ? 0x00ff00 : 0xff0000;
       const floor = new THREE.Mesh(
         RR.ROOM_FLOOR_VISUAL,
-        new THREE.MeshStandardMaterial({ color })
+        this.tile.start ? RR.FLOOR_MATERIAL_START : RR.FLOOR_MATERIAL_END
       );
+      floor.receiveShadow = true;
 
       floor.position.copy(floorPosition);
       this.visualMeshes_.push(floor);
@@ -137,18 +172,19 @@ export default class Room {
       return;
     }
 
+    // PARKOUR
     if (this.hasParkour) {
       const visualFloor = new THREE.Mesh(RR.LAVA_FLOOR, RR.LAVA_MATERIAL);
       visualFloor.receiveShadow = true;
       visualFloor.position.copy(floorPosition);
       this.visualMeshes_.push(visualFloor);
 
-      const collisionFloor = new THREE.Mesh(
-        RR.LAVA_FLOOR,
-        RR.INVISIBLE_MATERIAL
-      );
-      collisionFloor.position.copy(floorPosition);
-      this.collisionMeshes_.push(collisionFloor);
+      // const collisionFloor = new THREE.Mesh(
+      //   RR.LAVA_FLOOR,
+      //   RR.INVISIBLE_MATERIAL
+      // );
+      // collisionFloor.position.copy(floorPosition);
+      // this.collisionMeshes_.push(collisionFloor);
 
       if (ANIMATIONS_ENABLED) {
         const clock = RR.TEXTURE_CLOCK;
@@ -164,7 +200,7 @@ export default class Room {
       } return;
     }
 
-    // Visual
+    // DEFAULT
     const visualFloor = new THREE.Mesh(
       RR.ROOM_FLOOR_VISUAL,
       RR.FLOOR_MATERIAL_VISUAL
@@ -173,7 +209,6 @@ export default class Room {
     visualFloor.position.copy(floorPosition);
     this.visualMeshes_.push(visualFloor);
 
-    // Collision
     const collisionFloor = new THREE.Mesh(
       RR.ROOM_FLOOR_COLLISION,
       RR.INVISIBLE_MATERIAL
@@ -183,9 +218,26 @@ export default class Room {
   }
 
   /**
+   * Adds object to room if necessary
+   */
+  buildObjects() {
+    if (this.tile.end) {
+      loadStartEndPreset(
+        this.sceneBuilder_,
+        this.position,
+        [this.tile.N, this.tile.E, this.tile.S, this.tile.W]
+      )
+      return;
+    }
+    if (this.hasParkour) 
+    {
+      //const meshes = getRandomParkourPreset(position);
+    }
+  }
+
+  /**
    * Spawns a powerup at the given position
    * @param {Vector3} pos
-   * @param {string} type // Type of powerup (e.g., "speed", "jump", "time")
    */
   setPowerUp(position) {
     this.gameState_.addPowerup(position);
@@ -209,7 +261,6 @@ export default class Room {
     this.visualMeshes_.push(pointLight);
     this.visualMeshes_.push(target);
     
-
     if (ANIMATIONS_ENABLED) {
       let time = 0
       // Adds an animation to make the ball move up and down and spin
@@ -225,32 +276,42 @@ export default class Room {
   }
 
   /**
+   * =======================
    * HELPER METHODS
+   * =======================
+   */
+
+  /**
+   * Gets wall position
+   * @param {*} index 
+   * @returns Vector with wall position
    */
   getWallPosition_(index) {
+    const offset = ROOM_SIZE / 2;
+    const height = ROOM_HEIGHT / 2
     switch (index) {
       case 0: // N
         return new THREE.Vector3(
           this.position.x,
-          ROOM_HEIGHT / 2,
-          this.position.z - ROOM_SIZE / 2
+          height,
+          this.position.z - offset
         );
       case 1: // E
         return new THREE.Vector3(
-          this.position.x + ROOM_SIZE / 2,
-          ROOM_HEIGHT / 2,
+          this.position.x + offset,
+          height,
           this.position.z
         );
       case 2: // S
         return new THREE.Vector3(
           this.position.x,
-          ROOM_HEIGHT / 2,
-          this.position.z + ROOM_SIZE / 2
+          height,
+          this.position.z + offset
         );
       case 3: // W
         return new THREE.Vector3(
-          this.position.x - ROOM_SIZE / 2,
-          ROOM_HEIGHT / 2,
+          this.position.x - offset,
+          height,
           this.position.z
         );
       default:
@@ -258,32 +319,49 @@ export default class Room {
     }
   }
 
+  /**
+   * Gets the position of the lamp based on walls
+   * @returns Object wih Position & Rotation
+   */
   getLampPosition_() {
     // NE corner
-    // if (this.tile.N && this.tile.E)
-    //   return new THREE.Vector3(
-    //     this.position.x * 1.1,
-    //     0, 
-    //     this.position.z * 1.1
-    //   );
+    const offset = (ROOM_SIZE / 2) * 0.8
+    if (this.tile.N && this.tile.E)
+      return new THREE.Vector3(
+        this.position.x + offset,
+        0,
+        this.position.z - offset
+      );
 
-    // // SE corner
-    // if (this.tile.E && this.tile.S)
-    //   return null;
+    // SE corner
+    if (this.tile.E && this.tile.S)
+      return new THREE.Vector3(
+        this.position.x + offset,
+        0,
+        this.position.z + offset
+      );
 
-    // // SW corner
-    // if (this.tile.S && this.tile.W)
-    //   return null
+    // SW corner
+    if (this.tile.S && this.tile.W)
+      return new THREE.Vector3(
+        this.position.x - offset,
+        0,
+        this.position.z + offset
+      );
 
-    // // NW corner
-    // if (this.tile.W && this.tile.N)
-    //   return null
+    // NW corner
+    if (this.tile.W && this.tile.N)
+      return new THREE.Vector3(
+        this.position.x - offset,
+        0,
+        this.position.z - offset
+      );
 
     // default: center
     return new THREE.Vector3(
-      this.position.x + ROOM_SIZE / 2,
+      this.position.x,
       0,
-      this.position.z + ROOM_SIZE / 2
+      this.position.z
     )
   }
 }

@@ -53,7 +53,6 @@ class GameState {
     this.resetCallback();
 
     // Reset the timer
-    console.log(this.powerupLocations_)
     this.remainingTime_ += Config.TIMER; 
     this.showMessage("Increasing maze size, + " + Config.TIMER + "s");
   }

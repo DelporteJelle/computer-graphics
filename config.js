@@ -5,6 +5,7 @@ export const STEPS_PER_FRAME = 5;
 export const CAMERA_ANGLE_CAP = Math.PI / 2.3;
 export const TIMER = 60; // in seconds
 export const ANIMATIONS_ENABLED = true;
+export const ROOM_LIGHTS_ENABLED = true;
 
 /**
  * Maze Modifiers

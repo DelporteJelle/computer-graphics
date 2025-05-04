@@ -1,6 +1,5 @@
 import * as THREE from "https://cdn.skypack.dev/three@0.136";
 import * as Config from "../../config";
-import KeyEvents from "../KeyEvents";
 
 export default class Flashlight {
   constructor(camera) {

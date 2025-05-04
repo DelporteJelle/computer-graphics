@@ -95,12 +95,6 @@ export class Main {
     this.renderer_.domElement.addEventListener("mousedown", (event) => {
       this.onMinimapClick_(event);
     });
-
-    // window.addEventListener("keydown", (event) => {
-    //   if (event.key === "p") {
-    //     this.resetGame_();
-    //   }
-    // });
   }
 
   /**
@@ -143,7 +137,7 @@ export class Main {
     this.mazeGenerator_ = new MazeGenerator(this.MAZE_WIDTH, this.MAZE_DEPTH);
     //contains helper functions to build the scene. Pass true to enable debugging features
     this.sceneBuilder_ = new SceneBuilder(
-      true,
+      false,
       this.worldOctree_,
       this.scene_,
       this.MAZE_WIDTH,
@@ -178,6 +172,7 @@ export class Main {
       this.mazeGenerator_.start_tile.y * ROOM_SIZE
     );
 
+    this.gameState_.setSpawnpoint(spawnpoint);
     this.playerController_ = new PlayerController(
       this.worldOctree_,
       this.camera_,
@@ -185,7 +180,7 @@ export class Main {
       this.playerlight_,
     );
 
-    this.camera_.position.set(0, 5, 10);
+    //this.camera_.position.set(0, 5, 10);
     this.camera_.rotation.order = "YXZ";
   }
 
@@ -264,15 +259,6 @@ export class Main {
     }
   }
 
-  /**
-   * Updates pointlight position to follow player
-   */
-  updatePlayerlight() {
-    if (this.playerlight_ && this.camera_) {
-      this.playerlight_.update();
-    }
-  }
-
   onWindowResize_() {
     this.camera_.aspect = window.innerWidth / window.innerHeight;
     this.camera_.updateProjectionMatrix();
@@ -292,6 +278,7 @@ export class Main {
       this.mazeGenerator_.start_tile.x * ROOM_SIZE,
       this.mazeGenerator_.start_tile.y * ROOM_SIZE
     ));
+    this.playerController_.setFlashlight(this.playerlight_);
     this.playerController_.teleportPlayer(
       this.gameState_.spawnpoint
     );
@@ -353,8 +340,7 @@ export class Main {
       this.playerController_.controls(FIXED_TIMESTEP);
       this.playerController_.updatePlayer(FIXED_TIMESTEP);
       this.handlePlayerLocationChange_();
-      this.updatePlayerlight();
-      this.playerController_.teleportPlayerIfOob();
+      //this.updatePlayerlight();
       this.accumulator_ -= FIXED_TIMESTEP;
     }
 

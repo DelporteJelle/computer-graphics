@@ -4,8 +4,6 @@
  * - https://ambientcg.com/
  */
 
-import { metalness, normalMap, roughness } from "three/tsl";
-
 const BASE_PATH = "/resources/textures";
 
 /**
@@ -26,46 +24,39 @@ export const SLATE_FLOOR_TILE = {
 };
 
 export const STONE_PATH = {
-  baseColor: `${BASE_PATH}/StonePath/Stone_Path_007_basecolor.jpg`,
-  normalMap: `${BASE_PATH}/StonePath/Stone_Path_007_normal.jpg`,
-  displacementMap: `${BASE_PATH}/StonePath/Stone_Path_007_height.png`,
-  roughnessMap: `${BASE_PATH}/StonePath/Stone_Path_007_roughness.jpg`,
-  ambientOcclusionMap: `${BASE_PATH}/StonePath/Stone_Path_007_ambientOcclusion.jpg`,
+  baseColor: `${BASE_PATH}/StonePath007/Stone_Path_007_basecolor.jpg`,
+  normalMap: `${BASE_PATH}/StonePath007/Stone_Path_007_normal.jpg`,
+  displacementMap: `${BASE_PATH}/StonePath007/Stone_Path_007_height.png`,
+  roughnessMap: `${BASE_PATH}/StonePath007/Stone_Path_007_roughness.jpg`,
+  ambientOcclusionMap: `${BASE_PATH}/StonePath007/Stone_Path_007_ambientOcclusion.jpg`,
 };
 
 export const STONE_WALL = {
-  baseColor: `${BASE_PATH}/StoneWall/Wall_Stone_022_basecolor.jpg`,
-  normalMap: `${BASE_PATH}/StoneWall/Wall_Stone_022_normal.jpg`,
-  displacementMap: `${BASE_PATH}/StoneWall/Wall_Stone_022_height.png`,
-  roughnessMap: `${BASE_PATH}/StoneWall/Wall_Stone_022_roughness.jpg`,
-  ambientOcclusionMap: `${BASE_PATH}/StoneWall/Wall_Stone_022_ambientOcclusion.jpg`,
+  baseColor: `${BASE_PATH}/StoneWall022/Wall_Stone_022_basecolor.jpg`,
+  normalMap: `${BASE_PATH}/StoneWall022/Wall_Stone_022_normal.jpg`,
+  displacementMap: `${BASE_PATH}/StoneWall022/Wall_Stone_022_height.png`,
+  roughnessMap: `${BASE_PATH}/StoneWall022/Wall_Stone_022_roughness.jpg`,
+  ambientOcclusionMap: `${BASE_PATH}/StoneWall022/Wall_Stone_022_ambientOcclusion.jpg`,
 };
 
 export const STYLIZED_STONE_WALL = {
-  baseColor: `${BASE_PATH}/StylizedStoneWall/Stylized_Stone_Wall_001_basecolor.jpg`,
-  normalMap: `${BASE_PATH}/StylizedStoneWall/Stylized_Stone_Wall_001_normal.jpg`,
-  displacementMap: `${BASE_PATH}/StylizedStoneWall/Stylized_Stone_Wall_001_height.png`,
-  roughnessMap: `${BASE_PATH}/StylizedStoneWall/Stylized_Stone_Wall_001_roughness.jpg`,
-  ambientOcclusionMap: `${BASE_PATH}/StylizedStoneWall/Stylized_Stone_Wall_001_ambientOcclusion.jpg`,
+  baseColor: `${BASE_PATH}/StylizedStoneWall001/Stylized_Stone_Wall_001_basecolor.jpg`,
+  normalMap: `${BASE_PATH}/StylizedStoneWall001/Stylized_Stone_Wall_001_normal.jpg`,
+  displacementMap: `${BASE_PATH}/StylizedStoneWall001/Stylized_Stone_Wall_001_height.png`,
+  roughnessMap: `${BASE_PATH}/StylizedStoneWall001/Stylized_Stone_Wall_001_roughness.jpg`,
+  ambientOcclusionMap: `${BASE_PATH}/StylizedStoneWall001/Stylized_Stone_Wall_001_ambientOcclusion.jpg`,
 };
 
 export const QUAKE = {
   wallTiles: `${BASE_PATH}/Quake/wall_tiles.jpg`,
 };
 
-export const TILES_MARBLE_BLACK = {
-  baseColor: `${BASE_PATH}/TilesMarbleBlack/Tiles075_2K-PNG_Color.png`,
-  normalMap: `${BASE_PATH}/TilesMarbleBlack/Tiles075_2K-PNG_NormalGL.png`,
-  displacementMap: `${BASE_PATH}/TilesMarbleBlack/Tiles075_2K-PNG_Displacement.png`,
-  roughnessMap: `${BASE_PATH}/TilesMarbleBlack/Tiles075_2K-PNG_Roughness.png`,
-};
-
 export const MOSSY_BRICKS = {
-  baseColor: `${BASE_PATH}/MossyBricks/Bricks075B_1K-PNG_Color.png`,
-  normalMap: `${BASE_PATH}/MossyBricks/Bricks075B_1K-PNG_NormalGL.png`,
-  displacementMap: `${BASE_PATH}/MossyBricks/Bricks075B_1K-PNG_Displacement.png`,
-  roughnessMap: `${BASE_PATH}/MossyBricks/Bricks075B_1K-PNG_Roughness.png`,
-  ambientOcclusionMap: `${BASE_PATH}/MossyBricks/Bricks075B_1K-PNG_AmbientOcclusion.png`,
+  baseColor: `${BASE_PATH}/MossyBricks075/Bricks075B_1K-PNG_Color.png`,
+  normalMap: `${BASE_PATH}/MossyBricks075/Bricks075B_1K-PNG_NormalGL.png`,
+  displacementMap: `${BASE_PATH}/MossyBricks075/Bricks075B_1K-PNG_Displacement.png`,
+  roughnessMap: `${BASE_PATH}/MossyBricks075/Bricks075B_1K-PNG_Roughness.png`,
+  ambientOcclusionMap: `${BASE_PATH}/MossyBricks075/Bricks075B_1K-PNG_AmbientOcclusion.png`,
 };
 
 export const ONYX_013 = {
@@ -86,36 +77,36 @@ export const MARBLE_006 = {
  * METALS
  */
 export const METAL_PLATES = {
-  baseColor: `${BASE_PATH}/MetalPlates/MetalPlates010_1K-PNG_Color.png`,
-  normalMap: `${BASE_PATH}/MetalPlates/MetalPlates010_1K-PNG_NormalGL.png`,
-  displacementMap: `${BASE_PATH}/MetalPlates/MetalPlates010_1K-PNG_Displacement.png`,
-  roughnessMap: `${BASE_PATH}/MetalPlates/MetalPlates010_1K-PNG_Roughness.png`,
-  ambientOcclusionMap: `${BASE_PATH}/MetalPlates/MetalPlates010_1K-PNG_AmbientOcclusion.png`,
+  baseColor: `${BASE_PATH}/MetalPlates010/MetalPlates010_1K-PNG_Color.png`,
+  normalMap: `${BASE_PATH}/MetalPlates010/MetalPlates010_1K-PNG_NormalGL.png`,
+  displacementMap: `${BASE_PATH}/MetalPlates010/MetalPlates010_1K-PNG_Displacement.png`,
+  roughnessMap: `${BASE_PATH}/MetalPlates010/MetalPlates010_1K-PNG_Roughness.png`,
+  ambientOcclusionMap: `${BASE_PATH}/MetalPlates010/MetalPlates010_1K-PNG_AmbientOcclusion.png`,
 };
 
 export const METAL_WALKWAY = {
-  baseColor: `${BASE_PATH}/MetalWalkway/MetalWalkway005_2K-PNG_Color.png`,
-  normalMap: `${BASE_PATH}/MetalWalkway/MetalWalkway005_2K-PNG_NormalGL.png`,
-  displacementMap: `${BASE_PATH}/MetalWalkway/MetalWalkway005_2K-PNG_Displacement.png`,
-  roughnessMap: `${BASE_PATH}/MetalWalkway/MetalWalkway005_2K-PNG_Roughness.png`,
-  ambientOcclusionMap: `${BASE_PATH}/MetalWalkway/MetalWalkway005_2K-PNG_AmbientOcclusion.png`,
+  baseColor: `${BASE_PATH}/MetalWalkway005/MetalWalkway005_2K-PNG_Color.png`,
+  normalMap: `${BASE_PATH}/MetalWalkway005/MetalWalkway005_2K-PNG_NormalGL.png`,
+  displacementMap: `${BASE_PATH}/MetalWalkway005/MetalWalkway005_2K-PNG_Displacement.png`,
+  roughnessMap: `${BASE_PATH}/MetalWalkway005/MetalWalkway005_2K-PNG_Roughness.png`,
+  ambientOcclusionMap: `${BASE_PATH}/MetalWalkway005/MetalWalkway005_2K-PNG_AmbientOcclusion.png`,
 };
 
 export const CONCRETE_METAL = {
-  baseColor: `${BASE_PATH}/ConcreteMetal/Concrete041C_1K-PNG_Color.png`,
-  normalMap: `${BASE_PATH}/ConcreteMetal/Concrete041C_1K-PNG_NormalGL.png`,
-  displacementMap: `${BASE_PATH}/ConcreteMetal/Concrete041C_1K-PNG_Displacement.png`,
-  roughnessMap: `${BASE_PATH}/ConcreteMetal/Concrete041C_1K-PNG_Roughness.png`,
-  ambientOcclusionMap: `${BASE_PATH}/ConcreteMetal/Concrete041C_1K-PNG_AmbientOcclusion.png`,
-  metalness: `${BASE_PATH}/ConcreteMetal/Concrete041C_1K-PNG_Metallness.png`,
+  baseColor: `${BASE_PATH}/ConcreteMetal041/Concrete041C_1K-PNG_Color.png`,
+  normalMap: `${BASE_PATH}/ConcreteMetal041/Concrete041C_1K-PNG_NormalGL.png`,
+  displacementMap: `${BASE_PATH}/ConcreteMetal041/Concrete041C_1K-PNG_Displacement.png`,
+  roughnessMap: `${BASE_PATH}/ConcreteMetal041/Concrete041C_1K-PNG_Roughness.png`,
+  ambientOcclusionMap: `${BASE_PATH}/ConcreteMetal041/Concrete041C_1K-PNG_AmbientOcclusion.png`,
+  metalness: `${BASE_PATH}/ConcreteMetal041/Concrete041C_1K-PNG_Metallness.png`,
 };
 
 export const METAL_PLATES_GLOSSY = {
-  baseColor: `${BASE_PATH}/MetalPlates_Glossy/MetalPlates006_1K-JPG_Color.jpg`,
-  normalMap: `${BASE_PATH}/MetalPlates_Glossy/MetalPlates006_1K-JPG_NormalGL.jpg`,
-  displacementMap: `${BASE_PATH}/MetalPlates_Glossy/MetalPlates006_1K-JPG_Displacement.jpg`,
-  roughnessMap: `${BASE_PATH}/MetalPlates_Glossy/MetalPlates006_1K-JPG_Roughness.jpg`,
-  metalness: `${BASE_PATH}/MetalPlates_Glossy/MetalPlates006_1K-JPG_Metalness.jpg`,
+  baseColor: `${BASE_PATH}/MetalPlates006/MetalPlates006_1K-JPG_Color.jpg`,
+  normalMap: `${BASE_PATH}/MetalPlates006/MetalPlates006_1K-JPG_NormalGL.jpg`,
+  displacementMap: `${BASE_PATH}/MetalPlates006/MetalPlates006_1K-JPG_Displacement.jpg`,
+  roughnessMap: `${BASE_PATH}/MetalPlates006/MetalPlates006_1K-JPG_Roughness.jpg`,
+  metalness: `${BASE_PATH}/MetalPlates006/MetalPlates006_1K-JPG_Metalness.jpg`,
 };
 
 export const METAL_030 = {
@@ -134,15 +125,33 @@ export const METAL_012 = {
   metalness: `${BASE_PATH}/Metal012/Metal012_1K-JPG_Metalness.jpg`,
 };
 
+export const PAINTED_METAL_016 = {
+  baseColor: `${BASE_PATH}/PaintedMetal016/PaintedMetal016_1K-PNG_Color.png`,
+  normalMap: `${BASE_PATH}/PaintedMetal016/PaintedMetal016_1K-PNG_NormalGL.png`,
+  displacementMap: `${BASE_PATH}/PaintedMetal016/PaintedMetal016_1K-PNG_Displacement.png`,
+  roughnessMap: `${BASE_PATH}/PaintedMetal016/PaintedMetal016_1K-PNG_Roughness.png`,
+  metalness: `${BASE_PATH}/PaintedMetal016/PaintedMetal016_1K-PNG_Metalness.png`,
+  ambientOcclusionMap: `${BASE_PATH}/PaintedMetal016/PaintedMetal016_1K-PNG_AmbientOcclusion.png`
+};
+
+export const DIAMOND_PLATE_005 = {
+  baseColor: `${BASE_PATH}/DiamondPlate005/DiamondPlate005D_1K-PNG_Color.png`,
+  normalMap: `${BASE_PATH}/DiamondPlate005/DiamondPlate005D_1K-PNG_NormalGL.png`,
+  displacementMap: `${BASE_PATH}/DiamondPlate005/DiamondPlate005D_1K-PNG_Displacement.png`,
+  roughnessMap: `${BASE_PATH}/DiamondPlate005/DiamondPlate005D_1K-PNG_Roughness.png`,
+  metalness: `${BASE_PATH}/DiamondPlate005/DiamondPlate005D_1K-PNG_Metalness.png`,
+  ambientOcclusionMap: `${BASE_PATH}/DiamondPlate005/DiamondPlate005D_1K-PNG_AmbientOcclusion.png`
+};
+
 /**
  * ELEMENTS
  */
 export const LAVA_TEXTURE = {
-  baseColor: `${BASE_PATH}/Lava/Lava004_1K-PNG_Color.png`,
-  normalMap: `${BASE_PATH}/Lava/Lava004_1K-PNG_NormalGL.png`,
-  displacementMap: `${BASE_PATH}/Lava/Lava004_1K-PNG_Displacement.png`,
-  roughnessMap: `${BASE_PATH}/Lava/Lava004_1K-PNG_Roughness.png`,
-  emissionMap: `${BASE_PATH}/Lava/Lava004_1K-PNG_Emission.png`,
+  baseColor: `${BASE_PATH}/Lava004/Lava004_1K-PNG_Color.png`,
+  normalMap: `${BASE_PATH}/Lava004/Lava004_1K-PNG_NormalGL.png`,
+  displacementMap: `${BASE_PATH}/Lava004/Lava004_1K-PNG_Displacement.png`,
+  roughnessMap: `${BASE_PATH}/Lava004/Lava004_1K-PNG_Roughness.png`,
+  emissionMap: `${BASE_PATH}/Lava004/Lava004_1K-PNG_Emission.png`,
 };
 /**
  *  emissive: 0xff4500,

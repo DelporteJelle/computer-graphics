@@ -17,8 +17,6 @@ export default class PlayerController {
     camera,
     spawnpoint,
     flashlight,
-    powerupLocations,
-    showMessageCallback
   ) {
     this.worldOctree_ = octree;
     this.camera_ = camera;
@@ -80,11 +78,11 @@ export default class PlayerController {
   playerCollisions() {
     const result = this.worldOctree_.capsuleIntersect(this.playerCollider_);
 
+
     this.playerOnFloor_ = false;
 
     if (result) {
       this.playerOnFloor_ = result.normal.y > 0;
-
       if (!this.playerOnFloor_) {
         this.playerVelocity_.addScaledVector(
           result.normal,
@@ -155,8 +153,18 @@ export default class PlayerController {
 
     // Handle collisions and update the camera position
     this.playerCollisions();
+    // Teleport player if Out Of Bounds
+    this.teleportIfOOB();
+    // Check player proximity for powerups
     this.checkPlayerProximity(this.playerCollider_.end);
+    // Move camera
     this.camera_.position.copy(this.playerCollider_.end);
+    // Update flashlight position
+    if (this.flashlight_) this.flashlight_.update()
+  }
+
+  setFlashlight(flashlight) {
+    this.flashlight_ = flashlight;
   }
 
   getForwardVector() {
@@ -234,12 +242,9 @@ export default class PlayerController {
     }
   }
 
-  teleportPlayerIfOob() {
-    if (this.camera_.position.y <= -25) {
-      this.playerCollider_.start.set(0, 0.35, 0);
-      this.playerCollider_.end.set(0, 1, 0);
-      this.playerCollider_.radius = 0.35;
-      this.camera_.position.copy(this.playerCollider_.end);
+  teleportIfOOB() {
+    if (this.camera_.position.y <= -2) {
+      this.teleportPlayer(this.gameState_.spawnpoint)
       this.camera_.rotation.set(0, 0, 0);
     }
   }
