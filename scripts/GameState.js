@@ -6,12 +6,14 @@ class GameState {
     this.powerupLocations_ = [];
     this.remainingTime_ = Config.TIMER;
     this.spawnpoint_ = null;
+    this.lightingEnabled_ = Config.ROOM_LIGHTS_ENABLED;
 
     this.initializeTimer_();
   }
 
   get powerupLocations() { return this.powerupLocations_; }
   get spawnpoint() { return this.spawnpoint_; }
+  get lightingEnabled() { return this.lightingEnabled_; }
 
   initializeTimer_() {
     const timer = document.createElement("div");
@@ -73,6 +75,10 @@ class GameState {
 
   setSpawnpoint(vector) {
     this.spawnpoint_ = vector;
+  }
+
+  disableLighting() {
+    this.lightingEnabled_ = false;
   }
 
 

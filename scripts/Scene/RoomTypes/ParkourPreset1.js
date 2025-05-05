@@ -1,4 +1,5 @@
-import * as THREE from "https://cdn.skypack.dev/three@0.136";
+import * as THREE from "three";
+//import * as THREE from "https://cdn.skypack.dev/three@0.136";
 import * as RR from "../RoomResources";
 import { ROOM_SIZE, ROOM_HEIGHT } from "../../../config";
 

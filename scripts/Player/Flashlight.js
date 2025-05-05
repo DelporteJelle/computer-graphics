@@ -1,4 +1,5 @@
-import * as THREE from "https://cdn.skypack.dev/three@0.136";
+//import * as THREE from "https://cdn.skypack.dev/three@0.136";
+import * as THREE from "three";
 import * as Config from "../../config";
 
 export default class Flashlight {

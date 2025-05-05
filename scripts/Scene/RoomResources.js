@@ -1,4 +1,5 @@
-import * as THREE from "https://cdn.skypack.dev/three@0.136";
+import * as THREE from "three";
+//import * as THREE from "https://cdn.skypack.dev/three@0.136";
 import { ROOM_SIZE, ROOM_HEIGHT, WALL_DEPTH } from "../../config";
 import {
   CONCRETE_METAL,
@@ -62,8 +63,6 @@ export const ROUND_PLATFORM = new THREE.CylinderGeometry(
   2,
   32
 );
-export const SQUARE_PLATFORM = null;
-export const NARROW_PLATFORM = null;
 
 /**
  * =======================
@@ -73,7 +72,7 @@ export const NARROW_PLATFORM = null;
 const textureLoader = new THREE.TextureLoader();
 const getTexture = (
   path,
-  { repeatX = 1, repeatY = 1, encoding = THREE.LinearEncoding } = {}
+  { repeatX = 1, repeatY = 1, encoding = THREE.NoColorSpace } = {}
 ) => {
   const texture = textureLoader.load(path, (texture) => {
     texture.wrapS = THREE.RepeatWrapping;
@@ -91,12 +90,12 @@ export const INVISIBLE_MATERIAL = new THREE.MeshBasicMaterial({
 // Updated wall material with mappings, these are computationally expensive so I turned them off for now
 export const WALL_MATERIAL = new THREE.MeshStandardMaterial({
   color: 0xffffff,
-  map: getTexture(CONCRETE_METAL.baseColor, { encoding: THREE.sRGBEncoding }), // Base color texture
+  map: getTexture(CONCRETE_METAL.baseColor, { encoding: THREE.SRGBColorSpace }), // Base color texture
 });
 
 export const FLOOR_MATERIAL_VISUAL = new THREE.MeshStandardMaterial({
   color: 0xffffff,
-  map: getTexture(METAL_PLATES.baseColor, { encoding: THREE.sRGBEncoding }),
+  map: getTexture(METAL_PLATES.baseColor, { encoding: THREE.SRGBColorSpace }),
   normalMap: getTexture(METAL_PLATES.normalMap),
   normalScale: new THREE.Vector2(1, -1),
   displacementMap: getTexture(METAL_PLATES.displacementMap),
@@ -106,15 +105,12 @@ export const FLOOR_MATERIAL_VISUAL = new THREE.MeshStandardMaterial({
   aoMap: getTexture(METAL_PLATES.ambientOcclusionMap), //I turned ao off because it has little visual impact
   aoMapIntensity: 1,
   metalness: 0.7,
-  roughness: 0.5,
   // envMapIntensity: 1,
 });
 
 export const FLOOR_MATERIAL_START = new THREE.MeshStandardMaterial({
   color: 0xffffff,
-  map: getTexture(DIAMOND_PLATE_005.baseColor, {
-    encoding: THREE.sRGBEncoding,
-  }),
+  map: getTexture(DIAMOND_PLATE_005.baseColor, { encoding: THREE.SRGBColorSpace }),
   normalMap: getTexture(DIAMOND_PLATE_005.normalMap),
   normalScale: new THREE.Vector2(1, -1),
   // displacementMap: getTexture(DIAMOND_PLATE_005.displacementMap),
@@ -124,15 +120,12 @@ export const FLOOR_MATERIAL_START = new THREE.MeshStandardMaterial({
   aoMap: getTexture(DIAMOND_PLATE_005.ambientOcclusionMap), //I turned ao off because it has little visual impact
   aoMapIntensity: 1,
   metalness: 0.7,
-  roughness: 0.5,
   // envMapIntensity: 1,
 });
 
 export const FLOOR_MATERIAL_END = new THREE.MeshStandardMaterial({
   color: 0xffffff,
-  map: getTexture(PAINTED_METAL_016.baseColor, {
-    encoding: THREE.sRGBEncoding,
-  }),
+  map: getTexture(PAINTED_METAL_016.baseColor, { encoding: THREE.SRGBColorSpace }),
   normalMap: getTexture(PAINTED_METAL_016.normalMap),
   normalScale: new THREE.Vector2(1, -1),
   // displacementMap: getTexture(PAINTED_METAL_016.displacementMap),
@@ -142,26 +135,23 @@ export const FLOOR_MATERIAL_END = new THREE.MeshStandardMaterial({
   aoMap: getTexture(PAINTED_METAL_016.ambientOcclusionMap), //I turned ao off because it has little visual impact
   aoMapIntensity: 1,
   metalness: 0.7,
-  roughness: 0.5,
   // envMapIntensity: 1,
 });
 
 export const LAVA_MATERIAL = new THREE.MeshStandardMaterial({
   color: 0x666666,
-  map: getTexture(LAVA_TEXTURE.baseColor, { encoding: THREE.sRGBEncoding }),
+  map: getTexture(LAVA_TEXTURE.baseColor, { 
+    encoding: THREE.SRGBColorSpace 
+  }),
   normalMap: getTexture(LAVA_TEXTURE.normalMap),
   normalScale: new THREE.Vector2(1, -1),
   displacementMap: getTexture(LAVA_TEXTURE.displacementMap),
   displacementScale: 0.3,
   emissive: 0xff3300,
   emissiveMap: getTexture(LAVA_TEXTURE.emissionMap, {
-    encoding: THREE.sRGBEncoding,
+    encoding: THREE.SRGBColorSpace,
   }),
-  emissiveIntensity: 8,
+  emissiveIntensity: 2,
   roughnessMap: getTexture(LAVA_TEXTURE.roughnessMap),
   roughness: 0.5,
-  side: THREE.DoubleSide,
 });
-
-export const START_MATERIAL = null;
-export const END_MATERIAL = null;

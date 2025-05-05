@@ -1,7 +1,8 @@
 /**
  * THREE.js
  */
-import * as THREE from "https://cdn.skypack.dev/three@0.136";
+import * as THREE from "three";
+//import * as THREE from "https://cdn.skypack.dev/three@0.136";
 import Stats from "three/addons/libs/stats.module.js";
 import { Octree } from "three/addons/math/Octree.js";
 import { OctreeHelper } from "three/addons/helpers/OctreeHelper.js";
@@ -17,7 +18,6 @@ import PlayerController from "./scripts/Player/PlayerController";
 import MazeGenerator from "./scripts/MazeGenerator";
 import KeyEvents from "./scripts/KeyEvents";
 import getGameState from "./scripts/GameState";
-import { ICE_TEXTURE, TILES_CERAMIC_WHITE } from "./textures";
 
 /**
  * Config
@@ -144,13 +144,14 @@ export class Main {
       this.MAZE_DEPTH,
     );
     this.scene_.background = new THREE.Color(0x88ccee);
+    if (this.MAZE_WIDTH > 9 || this.MAZE_DEPTH > 9)
+      this.gameState_.disableLighting();
 
     // Generate maze and create rooms
     this.mazeGenerator_.generateMaze().then(() => {
       this.sceneBuilder_.buildMaze(this.mazeGenerator_.tiles);
     });
 
-    //this.sceneBuilder_.createPlane(this.MAZE_WIDTH, this.MAZE_DEPTH, 0);
     this.sceneBuilder_.createCeiling(
       this.MAZE_WIDTH, this.MAZE_DEPTH, ROOM_HEIGHT
     );
@@ -209,7 +210,7 @@ export class Main {
    */
   initializeLights_() {
     // Low ambient lighting
-    const ambientLight = new THREE.AmbientLight(0xfffffff, 0.5);
+    const ambientLight = new THREE.AmbientLight(0xdddddd, 0.15);
     this.scene_.add(ambientLight);
 
     // Flashlight
@@ -278,10 +279,9 @@ export class Main {
       this.mazeGenerator_.start_tile.x * ROOM_SIZE,
       this.mazeGenerator_.start_tile.y * ROOM_SIZE
     ));
+    // disable shadows on bigger maze size to reduce lag
     this.playerController_.setFlashlight(this.playerlight_);
-    this.playerController_.teleportPlayer(
-      this.gameState_.spawnpoint
-    );
+    this.playerController_.teleportPlayer(this.gameState_.spawnpoint);
   }
 
   /**
@@ -340,7 +340,6 @@ export class Main {
       this.playerController_.controls(FIXED_TIMESTEP);
       this.playerController_.updatePlayer(FIXED_TIMESTEP);
       this.handlePlayerLocationChange_();
-      //this.updatePlayerlight();
       this.accumulator_ -= FIXED_TIMESTEP;
     }
 

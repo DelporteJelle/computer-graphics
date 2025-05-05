@@ -1,7 +1,8 @@
 /**
  * THREE.hs
  */
-import * as THREE from "https://cdn.skypack.dev/three@0.136";
+//import * as THREE from "https://cdn.skypack.dev/three@0.136";
+import * as THREE from "three";
 import { Capsule } from "three/addons/math/Capsule.js";
 import KeyEvents from "../KeyEvents";
 import getGameState from "../GameState";

@@ -1,4 +1,5 @@
-import * as THREE from "https://cdn.skypack.dev/three@0.136";
+import * as THREE from "three";
+//import * as THREE from "https://cdn.skypack.dev/three@0.136";
 import getGameState from "../GameState";
 import { ROOM_SIZE, ROOM_HEIGHT, ROOM_LIGHTS_ENABLED } from "../../config";
 
@@ -55,7 +56,12 @@ export default class Room {
     this.buildObjects();
     this.buildLight();
     if (this.tile.hasPowerup && !(this.tile.start || this.tile.end))
-      this.setPowerUp(new THREE.Vector3(this.position.x, 2, this.position.y));
+      this.setPowerUp(new THREE.Vector3(
+        this.position.x,
+        2, 
+        this.position.y,
+      ));
+      
   }
 
   /**
@@ -123,8 +129,8 @@ export default class Room {
       return;
     }
 
-    if (ROOM_LIGHTS_ENABLED && this.hasLantern) {
-      this.light_ = new THREE.PointLight(0xffffff, 5, ROOM_SIZE * 2, 2);
+    if (this.gameState_.lightingEnabled && this.hasLantern && !this.tile.hasPowerup) {
+      this.light_ = new THREE.PointLight(0xffffff, 3, ROOM_SIZE * 2, 2);
       this.light_.position.copy(this.getLampPosition_());
       this.light_.castShadow = true;
       // Low shadow mapSize to reduce lag
@@ -189,9 +195,38 @@ export default class Room {
         const clock = RR.TEXTURE_CLOCK;
         const animate = () => {
           const delta = clock.getDelta();
-          const texture = visualFloor.material.map;
-          texture.offset.x += delta * 0.03;
-          texture.offset.y += delta * 0.03;
+          const offset = delta * 0.02;
+
+          const baseTexture = visualFloor.material.map;
+          if (baseTexture) {
+            baseTexture.offset.x += offset;
+            baseTexture.offset.y += offset;
+          }
+
+          const displacementMap = visualFloor.material.displacementMap;
+          if (displacementMap) {
+            displacementMap.offset.x += offset;
+            displacementMap.offset.y += offset;
+          }
+        
+          const normalMap = visualFloor.material.normalMap;
+          if (normalMap) {
+            normalMap.offset.x += offset;
+            normalMap.offset.y += offset;
+          }
+  
+          const roughnessMap = visualFloor.material.roughnessMap;
+          if (roughnessMap) {
+            roughnessMap.offset.x += offset;
+            roughnessMap.offset.y += offset;
+          }
+
+          const emissionMap = visualFloor.material.emissiveMap;
+          if (emissionMap) {
+            emissionMap.offset.x += offset;
+            emissionMap.offset.y += offset;
+          }
+        
 
           requestAnimationFrame(animate);
         };
@@ -250,7 +285,7 @@ export default class Room {
     sphere.receiveShadow = false;
     this.visualMeshes_.push(sphere);
 
-    const pointLight = PU.POWERUP_LIGHT;
+    const pointLight = new THREE.PointLight(0xff00ff, 0.5, 5);
     pointLight.position.copy(position);
     pointLight.castShadow = false; // Disable shadows to reduce texture unit usage
     const target = new THREE.Object3D();
@@ -264,7 +299,7 @@ export default class Room {
       let time = 0;
       // Adds an animation to make the ball move up and down and spin
       const animate = () => {
-        sphere.position.y = 1 + Math.sin(time * 2) * 0.4;
+        sphere.position.y = 1 + Math.sin(time * 2) * 0.2;
         sphere.rotation.y += 0.01;
         sphere.rotation.x += 0.005;
         time += 0.01;

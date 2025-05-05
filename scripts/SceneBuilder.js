@@ -1,14 +1,8 @@
 /**
  * THREE.js
  */
-import {
-  Box3,
-  BoxGeometry,
-  Mesh,
-  MeshBasicMaterial,
-  SphereGeometry,
-} from "three";
-import * as THREE from "https://cdn.skypack.dev/three@0.136";
+//import * as THREE from "https://cdn.skypack.dev/three@0.136";
+import * as THREE from "three";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 
 
@@ -62,16 +56,16 @@ export default class SceneBuilder {
       group.scale.copy(scale);
       this.scene_.add(group);
 
-      const boundingBox = new Box3().setFromObject(group);
+      const boundingBox = new THREE.Box3().setFromObject(group);
       const size = boundingBox.getSize(new THREE.Vector3());
       const center = boundingBox.getCenter(new THREE.Vector3());
 
       let boundingMesh;
       if (spherical) {
         const radius = Math.max(size.x, size.y, size.z) / 2;
-        boundingMesh = new Mesh(
-          new SphereGeometry(radius, 10, 10),
-          new MeshBasicMaterial({
+        boundingMesh = new THREE.Mesh(
+          new THREE.SphereGeometry(radius, 10, 10),
+          new THREE.MeshBasicMaterial({
             color: 0xff0000,
             visible: this.debugging_,
             wireframe: this.debugging_,
@@ -79,13 +73,13 @@ export default class SceneBuilder {
         );
         boundingMesh.scale.set(size.x / 2, size.y / 2, size.z / 2); // Scale to fit the bounding box
       } else {
-        const boxMaterial = new MeshBasicMaterial({
+        const boxMaterial = new THREE.MeshBasicMaterial({
           color: 0xff0000,
           visible: this.debugging_,
           wireframe: this.debugging_,
         });
-        boundingMesh = new Mesh(
-          new BoxGeometry(size.x, size.y, size.z),
+        boundingMesh = new THREE.Mesh(
+          new THREE.BoxGeometry(size.x, size.y, size.z),
           boxMaterial
         );
       }

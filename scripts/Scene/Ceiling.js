@@ -1,6 +1,7 @@
-import * as THREE from "https://cdn.skypack.dev/three@0.136";
+//import * as THREE from "https://cdn.skypack.dev/three@0.136";
+import * as THREE from "three";
 import * as Config from "../../config";
-import { SLATE_FLOOR_TILE, METAL_WALKWAY } from "../../textures";
+import { METAL_WALKWAY } from "../../textures";
 
 export default function createCeiling(
   width, 
@@ -9,7 +10,7 @@ export default function createCeiling(
 ) {
   const texture = METAL_WALKWAY;
   const textureLoader = new THREE.TextureLoader();
-  const getTexture = (path, { repeatX=1, repeatY=1, encoding=THREE.LinearEncoding } = {}) => {
+  const getTexture = (path, { repeatX=1, repeatY=1, encoding=THREE.NoColorSpace } = {}) => {
     const texture = textureLoader.load(path, (texture) => {
       texture.wrapS = THREE.RepeatWrapping;
       texture.wrapT = THREE.RepeatWrapping;
@@ -37,14 +38,15 @@ export default function createCeiling(
     total_depth * 5
   );
   const sharedCeilingMaterial = new THREE.MeshStandardMaterial({
-    color: 0x666666,
-    map: getTexture(texture.baseColor, { repeatX: width, repeatY: depth, encoding: THREE.sRGBEncoding }),
+    color: 0xffffff,
+    map: getTexture(texture.baseColor, { repeatX: width, repeatY: depth, encoding: THREE.SRGBColorSpace }),
     displacementMap: getTexture(texture.displacementMap, { repeatX: width, repeatY: depth }),
-    displacementScale: 0.7,
+    displacementScale: 0.8,
     roughnessMap: getTexture(texture.roughnessMap, { repeatX: width, repeatY: depth }),
     roughness: 0.5,
     aoMap: getTexture(texture.ambientOcclusionMap, { repeatX: width, repeatY: depth }),
     aoMapIntensity: 1,
+    metalness: 0.5,
   });
 
   const visualCeiling = new THREE.Mesh(
