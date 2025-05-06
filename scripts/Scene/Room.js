@@ -23,9 +23,12 @@ export default class Room {
     this.target_ = null;
 
     if (this.tile.start || this.tile.end) {
-      this.hasLantern = this.hasParkour = false;
+      this.hasPowerup = false;
+      this.hasLantern = false;
+      this.hasParkour = false;
     } else {
-      this.hasLantern = Math.random() <= 0.1; // 10%
+      this.hasPowerup = this.tile.hasPowerup;
+      this.hasLantern = !this.hasPowerup && Math.random() <= 0.120; // 10%
       this.hasParkour = !this.hasLantern && Math.random() <= 0.225; // 25%
     }
 
@@ -55,11 +58,11 @@ export default class Room {
     this.buildFloor();
     this.buildObjects();
     this.buildLight();
-    if (this.tile.hasPowerup && !(this.tile.start || this.tile.end))
+    if (this.hasPowerup)
       this.setPowerUp(new THREE.Vector3(
         this.position.x,
         2, 
-        this.position.y,
+        this.position.z,
       ));
       
   }
@@ -132,8 +135,7 @@ export default class Room {
     if (
       this.gameState_.lightingEnabled &&
       this.gameState_.lightCount < MAX_LIGHTS && 
-      this.hasLantern && 
-      !this.tile.hasPowerup
+      this.hasLantern
     ) {
       this.gameState_.addLight();
       this.light_ = new THREE.PointLight(0xffffff, 3, ROOM_SIZE * 2, 1);

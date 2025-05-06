@@ -65,8 +65,6 @@ export class Main {
     this.MAZE_WIDTH = STARTER_MAZE_WIDTH; // Width of the maze in tiles
     this.MAZE_DEPTH = STARTER_MAZE_DEPTH; // Depth of the maze in tiles
     this.gameState_ = getGameState(this.resetGame_);
-    this.remainingTime_ = TIMER; // Timer for the game
-    this.powerupLocations = []; //Powerup locations
 
     this.initialize_();
   }
