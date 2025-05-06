@@ -102,8 +102,8 @@ export default class Room {
         20,
         ROOM_HEIGHT * 2,
         Math.PI / 5,
-        0.3,
-        2
+        0.8,
+        1
       );
       // Spotlight
       this.light_.position.set(
@@ -123,14 +123,14 @@ export default class Room {
       this.target_.position.set(this.position.x, 0, this.position.z);
       this.light_.target = this.target_;
 
-      // debugging
+      //debugging
       // const helper = new THREE.SpotLightHelper(this.light_);
       // this.visualMeshes_.push(helper)
       return;
     }
 
     if (this.gameState_.lightingEnabled && this.hasLantern && !this.tile.hasPowerup) {
-      this.light_ = new THREE.PointLight(0xffffff, 3, ROOM_SIZE * 2, 2);
+      this.light_ = new THREE.PointLight(0xffffff, 3, ROOM_SIZE * 2, 1);
       this.light_.position.copy(this.getLampPosition_());
       this.light_.castShadow = true;
       // Low shadow mapSize to reduce lag
