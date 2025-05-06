@@ -1,5 +1,5 @@
 # Computer Graphics - Doom/Quake Environment 2025
-> **Group 10: Jelle Delporte, Cedrick Lauwyck**
+> **Group 9: Jelle Delporte, Cedrick Lauwyck**
 
 ### Running the code
 
