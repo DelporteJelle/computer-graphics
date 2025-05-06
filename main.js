@@ -266,9 +266,15 @@ export class Main {
     this.renderer_.setSize(window.innerWidth, window.innerHeight);
   }
 
-  resetGame_ = () => {
-    this.MAZE_DEPTH += 1;
-    this.MAZE_WIDTH += 1;
+  resetGame_ = (manual=false) => {
+    if (manual) {
+      this.MAZE_WIDTH = STARTER_MAZE_WIDTH;
+      this.MAZE_DEPTH = STARTER_MAZE_DEPTH;
+    } else {
+      this.MAZE_DEPTH += 1;
+      this.MAZE_WIDTH += 1;
+    }
+
     this.scene_.clear();
     this.worldOctree_.clear();
 

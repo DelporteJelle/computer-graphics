@@ -1,7 +1,7 @@
 import * as THREE from "three";
 //import * as THREE from "https://cdn.skypack.dev/three@0.136";
 import getGameState from "../GameState";
-import { ROOM_SIZE, ROOM_HEIGHT, ROOM_LIGHTS_ENABLED } from "../../config";
+import { ROOM_SIZE, ROOM_HEIGHT, ROOM_LIGHTS_ENABLED, MAX_LIGHTS } from "../../config";
 
 import { ANIMATIONS_ENABLED } from "../../config";
 import * as RR from "./RoomResources";
@@ -123,13 +123,19 @@ export default class Room {
       this.target_.position.set(this.position.x, 0, this.position.z);
       this.light_.target = this.target_;
 
-      //debugging
+      // debugging
       // const helper = new THREE.SpotLightHelper(this.light_);
       // this.visualMeshes_.push(helper)
       return;
     }
 
-    if (this.gameState_.lightingEnabled && this.hasLantern && !this.tile.hasPowerup) {
+    if (
+      this.gameState_.lightingEnabled &&
+      this.gameState_.lightCount < MAX_LIGHTS && 
+      this.hasLantern && 
+      !this.tile.hasPowerup
+    ) {
+      this.gameState_.addLight();
       this.light_ = new THREE.PointLight(0xffffff, 3, ROOM_SIZE * 2, 1);
       this.light_.position.copy(this.getLampPosition_());
       this.light_.castShadow = true;

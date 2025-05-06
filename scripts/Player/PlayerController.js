@@ -239,7 +239,7 @@ export default class PlayerController {
     }
 
     if (KeyEvents.getKeyPressed(Config.KEY_RESET)) {
-      this.gameState_.reset();
+      this.gameState_.reset(true);
     }
   }
 

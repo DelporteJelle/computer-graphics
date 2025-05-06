@@ -15,6 +15,7 @@ export const STARTER_MAZE_DEPTH = 5;
 export const ROOM_SIZE = 15;
 export const ROOM_HEIGHT = 10;
 export const WALL_DEPTH = 0.2;
+export const MAX_LIGHTS = 10;
 
 /**
  * Physics Modifiers

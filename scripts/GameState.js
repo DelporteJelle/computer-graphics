@@ -7,6 +7,7 @@ class GameState {
     this.remainingTime_ = Config.TIMER;
     this.spawnpoint_ = null;
     this.lightingEnabled_ = Config.ROOM_LIGHTS_ENABLED;
+    this.lightCount_ = 0;
 
     this.initializeTimer_();
   }
@@ -14,6 +15,7 @@ class GameState {
   get powerupLocations() { return this.powerupLocations_; }
   get spawnpoint() { return this.spawnpoint_; }
   get lightingEnabled() { return this.lightingEnabled_; }
+  get lightCount() { return this.lightCount_; }
 
   initializeTimer_() {
     const timer = document.createElement("div");
@@ -49,12 +51,19 @@ class GameState {
     }, 1000); // Update every second
   }
 
-  reset() {
+  reset(manual=false) {
     // Reset powerup locations
     this.powerupLocations_ = [];
-    this.resetCallback();
+    this.lightCount_ = 0;
 
-    // Reset the timer
+    if (manual) {
+      this.resetCallback(true);
+      this.remainingTime_ = Config.TIMER; 
+      this.showMessage("Manual reset");
+      return;
+    } 
+
+    this.resetCallback();
     this.remainingTime_ += Config.TIMER; 
     this.showMessage("Increasing maze size, + " + Config.TIMER + "s");
   }
@@ -79,6 +88,10 @@ class GameState {
 
   disableLighting() {
     this.lightingEnabled_ = false;
+  }
+
+  addLight() {
+    this.lightCount_++;
   }
 
 
